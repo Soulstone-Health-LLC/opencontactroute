@@ -227,9 +227,9 @@ Represents a support topic (e.g., Claims, Prior Authorization).
 
 | Field         | Type     | Notes                               |
 | ------------- | -------- | ----------------------------------- |
-| `name`        | String   | Required, unique, max 100           |
+| `name`        | String   | Required, unique                    |
 | `slug`        | String   | URL-safe identifier, auto-generated |
-| `description` | String   | Optional, max 500                   |
+| `description` | String   | Optional                            |
 | `is_active`   | Boolean  | Default `true`                      |
 | `sort_order`  | Number   | Controls display order in widget    |
 | `created_by`  | ObjectId | Ref: User                           |
@@ -246,13 +246,13 @@ The core document linking an audience + plan + topic to a contact method.
 | `audience_id`  | ObjectId | Ref: Audience, required                     |
 | `plan_id`      | ObjectId | Ref: Plan, required                         |
 | `topic_id`     | ObjectId | Ref: Topic, required                        |
-| `department`   | String   | Optional, max 200                           |
+| `department`   | String   | Optional                                    |
 | `phone`        | String   | Optional, E.164 or display format           |
 | `ivr_steps`    | [String] | Ordered list of IVR navigation instructions |
-| `portal_url`   | String   | Optional, validated URL                     |
-| `email`        | String   | Optional, validated email                   |
+| `portal_url`   | String   | Optional                                    |
+| `email`        | String   | Optional                                    |
 | `fax`          | String   | Optional                                    |
-| `notes`        | String   | Operational notes, max 1000                 |
+| `notes`        | String   | Operational notes                           |
 | `is_delegated` | Boolean  | Default `false`                             |
 | `vendor_name`  | String   | Required if `is_delegated` is `true`        |
 | `status`       | String   | `draft` \| `published`, default `draft`     |
