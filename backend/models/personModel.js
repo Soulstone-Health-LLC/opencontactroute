@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import stateAbbreviations from "../utils/enumValues/stateEnums.js";
-import nameSuffixes from "../utils/enumValues/nameSuffixes.js";
 
 const { Schema } = mongoose;
 
@@ -32,7 +31,7 @@ const personSchema = new Schema(
     suffix: {
       type: String,
       enum: {
-        values: nameSuffixes,
+        values: ["Jr.", "Sr.", "II", "III", "IV", "V", "MD", "PhD", "Esq."],
         message: "Invalid suffix value",
       },
     },

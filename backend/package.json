@@ -13,7 +13,7 @@
     "node": ">=24.0.0"
   },
   "author": "Rodney Gauna",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0-only",
   "description": "OpenContactRoute backend API - MERN stack contact route platform",
   "dependencies": {
     "bcryptjs": "^3.0.3",

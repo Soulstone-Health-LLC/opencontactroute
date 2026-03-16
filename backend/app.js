@@ -6,7 +6,6 @@ import configurePassport from "./middleware/passportConfig.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
 import personRoutes from "./routes/personRoutes.js";
-import enumRoutes from "./routes/enumRoutes.js";
 
 const app = express();
 
@@ -37,8 +36,6 @@ app.use(passport.initialize());
 app.use("/api/v1/users", userRoutes);
 // Routes - Persons
 app.use("/api/v1/persons", personRoutes);
-// Routes - Enums
-app.use("/api/v1/enums", enumRoutes);
 
 // Error handling
 app.use(notFound);
