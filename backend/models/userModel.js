@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditLogPlugin } from "../utils/auditLogPlugin.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -36,5 +37,8 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// ─── PLUGINS ──────────────────────────────────────────────────────────────────
+userSchema.plugin(auditLogPlugin);
 
 export default mongoose.model("User", userSchema);

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditLogPlugin } from "../utils/auditLogPlugin.js";
 
 const { Schema } = mongoose;
 
@@ -74,5 +75,8 @@ personSchema.virtual("display_name").get(function () {
 // Ensure virtuals are included in JSON output
 personSchema.set("toJSON", { virtuals: true });
 personSchema.set("toObject", { virtuals: true });
+
+// ─── PLUGINS ──────────────────────────────────────────────────────────────────
+personSchema.plugin(auditLogPlugin);
 
 export default mongoose.model("Person", personSchema);

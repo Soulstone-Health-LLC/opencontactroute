@@ -25,7 +25,7 @@ export const createPerson = asyncHandler(async (req, res) => {
   }
 
   // Create new person
-  const person = await Person.create({
+  const person = new Person({
     user_id,
     first_name,
     middle_name,
@@ -33,13 +33,10 @@ export const createPerson = asyncHandler(async (req, res) => {
     suffix,
     is_active: is_active !== undefined ? is_active : true,
   });
+  person._changedBy = req.user._id;
+  await person.save();
 
-  if (person) {
-    res.status(201).json(person);
-  } else {
-    res.status(400);
-    throw new Error("Invalid person data");
-  }
+  res.status(201).json(person);
 });
 
 // ─── GET ALL PERSONS ─────────────────────────────────────────────────────────
@@ -125,8 +122,9 @@ export const updatePerson = asyncHandler(async (req, res) => {
     req.params.id,
     req.body,
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
+      _changedBy: req.user._id,
     },
   ).populate("user_id", "email user_role is_active");
 
@@ -171,8 +169,9 @@ export const updatePersonProfile = asyncHandler(async (req, res) => {
 
   // Update person profile
   const updatedPerson = await Person.findByIdAndUpdate(person._id, req.body, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
+    _changedBy: req.user._id,
   }).populate("user_id", "email user_role is_active");
 
   res.status(200).json(updatedPerson);
