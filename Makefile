@@ -1,5 +1,5 @@
 # Makefile
-.PHONY: build run up stop clean logs start api restart
+.PHONY: build run up stop clean logs start api restart seed demo
 
 # Docker-related variables
 DOCKER_COMPOSE = docker compose
@@ -38,3 +38,11 @@ api:
 
 # Quick restart
 restart: stop up logs
+
+# Run the seed script inside the running backend container
+seed:
+	$(DOCKER_COMPOSE) exec backend npm run seed
+
+# Bring up MongoDB + backend, then seed demo data
+demo: api
+	$(DOCKER_COMPOSE) exec backend npm run seed

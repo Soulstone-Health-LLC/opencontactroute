@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import app from "./app.js";
+import logger from "./utils/logger.js";
 
 dotenv.config({ path: "./.env" });
 
@@ -15,11 +16,15 @@ const MONGO_URI = `mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}/$
 const PORT = process.env.PORT || 3001;
 try {
   await mongoose.connect(MONGO_URI);
-  console.log(`Connected to MongoDB`);
+  logger.info("Connected to MongoDB");
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.info({
+      message: "Server started",
+      port: PORT,
+      env: process.env.NODE_ENV,
+    });
   });
 } catch (error) {
-  console.error(`Error: ${error.message}`);
+  logger.error({ message: "Failed to start server", error: error.message });
   process.exit(1);
 }

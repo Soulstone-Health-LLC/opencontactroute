@@ -1,4 +1,5 @@
 import AuditLog from "../models/auditLogModel.js";
+import logger from "./logger.js";
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -79,10 +80,11 @@ export function auditLogPlugin(schema) {
         changes,
       });
     } catch (err) {
-      console.error(
-        `[AuditLog] Failed to write audit log on save (${this.constructor.modelName}):`,
-        err.message,
-      );
+      logger.error({
+        message: "Failed to write audit log on save",
+        resource: this.constructor.modelName,
+        error: err.message,
+      });
     }
   });
 
@@ -114,10 +116,11 @@ export function auditLogPlugin(schema) {
         changes,
       });
     } catch (err) {
-      console.error(
-        `[AuditLog] Failed to write audit log on findOneAndUpdate (${this.model.modelName}):`,
-        err.message,
-      );
+      logger.error({
+        message: "Failed to write audit log on findOneAndUpdate",
+        resource: this.model.modelName,
+        error: err.message,
+      });
     }
   });
 
@@ -147,10 +150,11 @@ export function auditLogPlugin(schema) {
         changes: [],
       });
     } catch (err) {
-      console.error(
-        `[AuditLog] Failed to write audit log on findOneAndDelete (${this.model.modelName}):`,
-        err.message,
-      );
+      logger.error({
+        message: "Failed to write audit log on findOneAndDelete",
+        resource: this.model.modelName,
+        error: err.message,
+      });
     }
   });
 }
