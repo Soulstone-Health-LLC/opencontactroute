@@ -317,11 +317,10 @@ describe("PUT /api/v1/persons/:id", () => {
     const res = await request(app)
       .put(`${BASE}/${personId}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ first_name: "Updated", specialty: "Neurology" });
+      .send({ first_name: "Updated" });
 
     expect(res.status).toBe(200);
     expect(res.body.first_name).toBe("Updated");
-    expect(res.body.specialty).toBe("Neurology");
   });
 
   it("should update person to inactive status", async () => {

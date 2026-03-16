@@ -47,7 +47,7 @@ const personSchema = new Schema(
 );
 
 // ─── INDEXES ─────────────────────────────────────────────────────────────────
-personSchema.index({ user_id: 1 });
+// Note: user_id index is created automatically via `unique: true` in the schema
 personSchema.index({ last_name: 1, first_name: 1 });
 
 // ─── VIRTUALS ────────────────────────────────────────────────────────────────

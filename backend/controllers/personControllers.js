@@ -24,15 +24,6 @@ export const createPerson = asyncHandler(async (req, res) => {
     throw new Error("Person record already exists for this user");
   }
 
-  // Check if NPI is provided and already exists
-  if (npi) {
-    const npiExists = await Person.findOne({ npi });
-    if (npiExists) {
-      res.status(400);
-      throw new Error("NPI already exists");
-    }
-  }
-
   // Create new person
   const person = await Person.create({
     user_id,
