@@ -38,6 +38,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// Health check (unauthenticated, used by Docker and monitoring)
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+
 // Routes - Users
 app.use("/api/v1/users", userRoutes);
 // Routes - Persons
