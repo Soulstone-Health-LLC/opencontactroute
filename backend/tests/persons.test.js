@@ -119,10 +119,11 @@ describe("POST /api/v1/persons", () => {
 // ─── GET /api/v1/persons ─────────────────────────────────────────────────────
 
 describe("GET /api/v1/persons", () => {
-  it("should return all persons", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
+  it("should return all persons for admin", async () => {
+    const { token: adminToken, userId: userId1 } = await createAndAuthUser(
       "get1@example.com",
       "Password123!",
+      "admin",
     );
     const { token: token2, userId: userId2 } = await createAndAuthUser(
       "get2@example.com",
@@ -131,45 +132,84 @@ describe("GET /api/v1/persons", () => {
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId1, { first_name: "Alice" }));
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId2, { first_name: "Bob" }));
 
     const res = await request(app)
       .get(BASE)
-      .set("Authorization", `Bearer ${token1}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
   });
 
+  it("should return all persons for super user", async () => {
+    const { token: superToken, userId } = await createAndAuthUser(
+      "get.super@example.com",
+      "Password123!",
+      "super user",
+    );
+
+    await request(app)
+      .post(BASE)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send(createPersonData(userId, { first_name: "SuperViewer" }));
+
+    const res = await request(app)
+      .get(BASE)
+      .set("Authorization", `Bearer ${superToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("should return 403 for regular user", async () => {
+    const { token: userToken } = await createAndAuthUser(
+      "get.user403@example.com",
+      "Password123!",
+      "user",
+    );
+
+    const res = await request(app)
+      .get(BASE)
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
   it("should filter persons by is_active status", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
+    const { token: adminToken } = await createAndAuthUser(
+      "active.admin@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { userId: userId1 } = await createAndAuthUser(
       "active1@example.com",
       "Password123!",
     );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
+    const { userId: userId2 } = await createAndAuthUser(
       "active2@example.com",
       "Password123!",
     );
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId1, { is_active: true }));
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId2, { is_active: false }));
 
     const res = await request(app)
       .get(`${BASE}?is_active=false`)
-      .set("Authorization", `Bearer ${token1}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
@@ -177,32 +217,37 @@ describe("GET /api/v1/persons", () => {
   });
 
   it("should search persons by name", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
+    const { token: adminToken } = await createAndAuthUser(
+      "search.admin@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { userId: userId1 } = await createAndAuthUser(
       "search1@example.com",
       "Password123!",
     );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
+    const { userId: userId2 } = await createAndAuthUser(
       "search2@example.com",
       "Password123!",
     );
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(
         createPersonData(userId1, { first_name: "Alice", last_name: "Smith" }),
       );
 
     await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(
         createPersonData(userId2, { first_name: "Bob", last_name: "Jones" }),
       );
 
     const res = await request(app)
       .get(`${BASE}?search=Alice`)
-      .set("Authorization", `Bearer ${token1}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
@@ -218,37 +263,93 @@ describe("GET /api/v1/persons", () => {
 // ─── GET /api/v1/persons/:id ─────────────────────────────────────────────────
 
 describe("GET /api/v1/persons/:id", () => {
-  it("should return a person by ID", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "getid@example.com",
+  it("should return a person by ID for admin", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "getid.admin@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { userId } = await createAndAuthUser(
+      "getid.target@example.com",
       "Password123!",
     );
 
     const createRes = await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId));
 
     const personId = createRes.body._id;
 
     const res = await request(app)
       .get(`${BASE}/${personId}`)
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body._id).toBe(personId);
     expect(res.body.first_name).toBe("John");
   });
 
-  it("should return 404 if person not found", async () => {
-    const { token } = await createAndAuthUser(
-      "notfound@example.com",
+  it("should return a person by ID for super user", async () => {
+    const { token: superToken } = await createAndAuthUser(
+      "getid.super@example.com",
       "Password123!",
+      "super user",
+    );
+    const { userId } = await createAndAuthUser(
+      "getid.super.target@example.com",
+      "Password123!",
+    );
+
+    const createRes = await request(app)
+      .post(BASE)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send(createPersonData(userId));
+
+    const personId = createRes.body._id;
+
+    const res = await request(app)
+      .get(`${BASE}/${personId}`)
+      .set("Authorization", `Bearer ${superToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body._id).toBe(personId);
+  });
+
+  it("should return 403 for regular user", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "getid.admin2@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { token: userToken, userId } = await createAndAuthUser(
+      "getid.user403@example.com",
+      "Password123!",
+      "user",
+    );
+
+    const createRes = await request(app)
+      .post(BASE)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(createPersonData(userId));
+
+    const res = await request(app)
+      .get(`${BASE}/${createRes.body._id}`)
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("should return 404 if person not found", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "notfound.admin@example.com",
+      "Password123!",
+      "admin",
     );
 
     const res = await request(app)
       .get(`${BASE}/507f1f77bcf86cd799439011`)
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(404);
     expect(res.body.message).toMatch(/person not found/i);
@@ -301,44 +402,104 @@ describe("GET /api/v1/persons/user/:userId", () => {
 // ─── PUT /api/v1/persons/:id ─────────────────────────────────────────────────
 
 describe("PUT /api/v1/persons/:id", () => {
-  it("should update a person", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "update@example.com",
+  it("should update a person for admin", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "update.admin@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { userId } = await createAndAuthUser(
+      "update.target@example.com",
       "Password123!",
     );
 
     const createRes = await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId));
 
     const personId = createRes.body._id;
 
     const res = await request(app)
       .put(`${BASE}/${personId}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ first_name: "Updated" });
 
     expect(res.status).toBe(200);
     expect(res.body.first_name).toBe("Updated");
   });
 
+  it("should return 403 for super user", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "update.admin2@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { token: superToken, userId } = await createAndAuthUser(
+      "update.super403@example.com",
+      "Password123!",
+      "super user",
+    );
+
+    const createRes = await request(app)
+      .post(BASE)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(createPersonData(userId));
+
+    const res = await request(app)
+      .put(`${BASE}/${createRes.body._id}`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ first_name: "Blocked" });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("should return 403 for regular user", async () => {
+    const { token: adminToken } = await createAndAuthUser(
+      "update.admin3@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { token: userToken, userId } = await createAndAuthUser(
+      "update.user403@example.com",
+      "Password123!",
+      "user",
+    );
+
+    const createRes = await request(app)
+      .post(BASE)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(createPersonData(userId));
+
+    const res = await request(app)
+      .put(`${BASE}/${createRes.body._id}`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ first_name: "Blocked" });
+
+    expect(res.status).toBe(403);
+  });
+
   it("should update person to inactive status", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "deactivate@example.com",
+    const { token: adminToken } = await createAndAuthUser(
+      "deact.admin@example.com",
+      "Password123!",
+      "admin",
+    );
+    const { userId } = await createAndAuthUser(
+      "deact.target@example.com",
       "Password123!",
     );
 
     const createRes = await request(app)
       .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(createPersonData(userId));
 
     const personId = createRes.body._id;
 
     const res = await request(app)
       .put(`${BASE}/${personId}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ is_active: false });
 
     expect(res.status).toBe(200);
@@ -346,14 +507,15 @@ describe("PUT /api/v1/persons/:id", () => {
   });
 
   it("should return 404 if person not found", async () => {
-    const { token } = await createAndAuthUser(
-      "updatenotfound@example.com",
+    const { token: adminToken } = await createAndAuthUser(
+      "updatenotfound.admin@example.com",
       "Password123!",
+      "admin",
     );
 
     const res = await request(app)
       .put(`${BASE}/507f1f77bcf86cd799439011`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ first_name: "Test" });
 
     expect(res.status).toBe(404);

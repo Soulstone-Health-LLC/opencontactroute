@@ -75,6 +75,7 @@ describe("Audit Log — Person update", () => {
     const { token, userId } = await createAndAuthUser(
       "auditupdate@example.com",
       "Password123!",
+      "admin",
     );
 
     const createRes = await createPerson(token, userId, {
@@ -104,6 +105,7 @@ describe("Audit Log — Person update", () => {
     const { token, userId } = await createAndAuthUser(
       "auditupdateby@example.com",
       "Password123!",
+      "admin",
     );
 
     const createRes = await createPerson(token, userId);
@@ -126,6 +128,7 @@ describe("Audit Log — Person update", () => {
     const { token, userId } = await createAndAuthUser(
       "auditdiff@example.com",
       "Password123!",
+      "admin",
     );
 
     const createRes = await createPerson(token, userId, {
