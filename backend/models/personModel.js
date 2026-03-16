@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import stateAbbreviations from "../utils/enumValues/stateEnums.js";
 
 const { Schema } = mongoose;
 

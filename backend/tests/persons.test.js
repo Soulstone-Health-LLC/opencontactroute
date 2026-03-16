@@ -26,11 +26,6 @@ const createPersonData = (user_id, overrides = {}) => ({
   user_id,
   first_name: "John",
   last_name: "Doe",
-  primary_phone: "+12125551234",
-  address_line1: "123 Main St",
-  city: "New York",
-  state: "NY",
-  zip_code: "10001",
   ...overrides,
 });
 
@@ -46,10 +41,6 @@ describe("POST /api/v1/persons", () => {
     const personData = createPersonData(userId, {
       middle_name: "Michael",
       suffix: "Jr.",
-      credentials: "MD",
-      provider_type: "Physician",
-      specialty: "Cardiology",
-      npi: "1234567890",
     });
 
     const res = await request(app)
@@ -62,69 +53,8 @@ describe("POST /api/v1/persons", () => {
     expect(res.body.middle_name).toBe("Michael");
     expect(res.body.last_name).toBe("Doe");
     expect(res.body.suffix).toBe("Jr.");
-    expect(res.body.credentials).toBe("MD");
-    expect(res.body.provider_type).toBe("Physician");
-    expect(res.body.specialty).toBe("Cardiology");
-    expect(res.body.npi).toBe("1234567890");
     expect(res.body.user_id).toBe(userId);
     expect(res.body.is_active).toBe(true);
-  });
-
-  it("should create a person with multiple licenses", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "licenses@example.com",
-      "Password123!",
-    );
-
-    const personData = createPersonData(userId, {
-      licenses: [
-        {
-          license_number: "MD123456",
-          license_state: "NY",
-          license_type: "Medical",
-          is_active: true,
-        },
-        {
-          license_number: "MD789012",
-          license_state: "NJ",
-          license_type: "Medical",
-          is_active: true,
-        },
-      ],
-    });
-
-    const res = await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
-      .send(personData);
-
-    expect(res.status).toBe(201);
-    expect(res.body.licenses).toHaveLength(2);
-    expect(res.body.licenses[0].license_number).toBe("MD123456");
-    expect(res.body.licenses[0].license_state).toBe("NY");
-    expect(res.body.licenses[1].license_number).toBe("MD789012");
-    expect(res.body.licenses[1].license_state).toBe("NJ");
-  });
-
-  it("should create a non-provider person without professional fields", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "admin@example.com",
-      "Password123!",
-    );
-
-    const personData = createPersonData(userId, {
-      provider_type: "Administrator",
-    });
-
-    const res = await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
-      .send(personData);
-
-    expect(res.status).toBe(201);
-    expect(res.body.provider_type).toBe("Administrator");
-    expect(res.body.npi).toBeUndefined();
-    expect(res.body.specialty).toBeUndefined();
   });
 
   it("should return 404 if user_id does not exist", async () => {
@@ -164,32 +94,6 @@ describe("POST /api/v1/persons", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/person record already exists/i);
-  });
-
-  it("should return 400 if NPI already exists", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
-      "npi1@example.com",
-      "Password123!",
-    );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
-      "npi2@example.com",
-      "Password123!",
-    );
-
-    const personData1 = createPersonData(userId1, { npi: "1234567890" });
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
-      .send(personData1);
-
-    const personData2 = createPersonData(userId2, { npi: "1234567890" });
-    const res = await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
-      .send(personData2);
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/npi already exists/i);
   });
 
   it("should return 400 if required fields are missing", async () => {
@@ -241,64 +145,6 @@ describe("GET /api/v1/persons", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
-  });
-
-  it("should filter persons by provider_type", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
-      "filter1@example.com",
-      "Password123!",
-    );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
-      "filter2@example.com",
-      "Password123!",
-    );
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
-      .send(createPersonData(userId1, { provider_type: "Physician" }));
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
-      .send(createPersonData(userId2, { provider_type: "Administrator" }));
-
-    const res = await request(app)
-      .get(`${BASE}?provider_type=Physician`)
-      .set("Authorization", `Bearer ${token1}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].provider_type).toBe("Physician");
-  });
-
-  it("should filter persons by specialty", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
-      "specialty1@example.com",
-      "Password123!",
-    );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
-      "specialty2@example.com",
-      "Password123!",
-    );
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
-      .send(createPersonData(userId1, { specialty: "Cardiology" }));
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
-      .send(createPersonData(userId2, { specialty: "Pediatrics" }));
-
-    const res = await request(app)
-      .get(`${BASE}?specialty=Cardiology`)
-      .set("Authorization", `Bearer ${token1}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].specialty).toBe("Cardiology");
   });
 
   it("should filter persons by is_active status", async () => {
@@ -500,37 +346,6 @@ describe("PUT /api/v1/persons/:id", () => {
     expect(res.body.is_active).toBe(false);
   });
 
-  it("should return 400 if updating to duplicate NPI", async () => {
-    const { token: token1, userId: userId1 } = await createAndAuthUser(
-      "npiupdate1@example.com",
-      "Password123!",
-    );
-    const { token: token2, userId: userId2 } = await createAndAuthUser(
-      "npiupdate2@example.com",
-      "Password123!",
-    );
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token1}`)
-      .send(createPersonData(userId1, { npi: "1111111111" }));
-
-    const createRes2 = await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token2}`)
-      .send(createPersonData(userId2, { npi: "2222222222" }));
-
-    const personId2 = createRes2.body._id;
-
-    const res = await request(app)
-      .put(`${BASE}/${personId2}`)
-      .set("Authorization", `Bearer ${token2}`)
-      .send({ npi: "1111111111" });
-
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/npi already exists/i);
-  });
-
   it("should return 404 if person not found", async () => {
     const { token } = await createAndAuthUser(
       "updatenotfound@example.com",
@@ -615,11 +430,10 @@ describe("PUT /api/v1/persons/profile", () => {
     const res = await request(app)
       .put(`${BASE}/profile`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ first_name: "UpdatedProfile", primary_phone: "+19175551234" });
+      .send({ first_name: "UpdatedProfile" });
 
     expect(res.status).toBe(200);
     expect(res.body.first_name).toBe("UpdatedProfile");
-    expect(res.body.primary_phone).toBe("+19175551234");
   });
 
   it("should not allow updating user_id through profile", async () => {
@@ -663,51 +477,6 @@ describe("PUT /api/v1/persons/profile", () => {
       .put(`${BASE}/profile`)
       .send({ first_name: "Test" });
 
-    expect(res.status).toBe(401);
-  });
-});
-
-// ─── GET /api/v1/persons/search/npi/:npi ─────────────────────────────────────
-
-describe("GET /api/v1/persons/search/npi/:npi", () => {
-  it("should return person by NPI", async () => {
-    const { token, userId } = await createAndAuthUser(
-      "searchnpi@example.com",
-      "Password123!",
-    );
-
-    await request(app)
-      .post(BASE)
-      .set("Authorization", `Bearer ${token}`)
-      .send(
-        createPersonData(userId, { npi: "9876543210", first_name: "NPITest" }),
-      );
-
-    const res = await request(app)
-      .get(`${BASE}/search/npi/9876543210`)
-      .set("Authorization", `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.npi).toBe("9876543210");
-    expect(res.body.first_name).toBe("NPITest");
-  });
-
-  it("should return 404 if NPI not found", async () => {
-    const { token } = await createAndAuthUser(
-      "nonpi@example.com",
-      "Password123!",
-    );
-
-    const res = await request(app)
-      .get(`${BASE}/search/npi/0000000000`)
-      .set("Authorization", `Bearer ${token}`);
-
-    expect(res.status).toBe(404);
-    expect(res.body.message).toMatch(/person not found/i);
-  });
-
-  it("should return 401 with no token", async () => {
-    const res = await request(app).get(`${BASE}/search/npi/9876543210`);
     expect(res.status).toBe(401);
   });
 });
