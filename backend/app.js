@@ -6,6 +6,7 @@ import configurePassport from "./middleware/passportConfig.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
 import personRoutes from "./routes/personRoutes.js";
+import audienceRoutes from "./routes/audienceRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 
 const app = express();
@@ -37,6 +38,8 @@ app.use(passport.initialize());
 app.use("/api/v1/users", userRoutes);
 // Routes - Persons
 app.use("/api/v1/persons", personRoutes);
+// Routes - Audiences
+app.use("/api/v1/audiences", audienceRoutes);
 // Routes - Reports
 app.use("/api/v1/reports", reportRoutes);
 
