@@ -32,6 +32,8 @@ export const createPerson = asyncHandler(async (req, res) => {
     last_name,
     suffix,
     is_active: is_active !== undefined ? is_active : true,
+    created_by: req.user._id,
+    updated_by: req.user._id,
   });
   person._changedBy = req.user._id;
   await person.save();
@@ -120,7 +122,7 @@ export const updatePerson = asyncHandler(async (req, res) => {
   // Update person fields
   const updatedPerson = await Person.findByIdAndUpdate(
     req.params.id,
-    req.body,
+    { ...req.body, updated_by: req.user._id },
     {
       returnDocument: "after",
       runValidators: true,
@@ -168,11 +170,15 @@ export const updatePersonProfile = asyncHandler(async (req, res) => {
   }
 
   // Update person profile
-  const updatedPerson = await Person.findByIdAndUpdate(person._id, req.body, {
-    returnDocument: "after",
-    runValidators: true,
-    _changedBy: req.user._id,
-  }).populate("user_id", "email user_role is_active");
+  const updatedPerson = await Person.findByIdAndUpdate(
+    person._id,
+    { ...req.body, updated_by: req.user._id },
+    {
+      returnDocument: "after",
+      runValidators: true,
+      _changedBy: req.user._id,
+    },
+  ).populate("user_id", "email user_role is_active");
 
   res.status(200).json(updatedPerson);
 });

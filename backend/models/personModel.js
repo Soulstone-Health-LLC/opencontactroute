@@ -17,16 +17,13 @@ const personSchema = new Schema(
     first_name: {
       type: String,
       required: [true, "First name is required"],
-      maxLength: [50, "Maximum length is 50"],
     },
     middle_name: {
       type: String,
-      maxLength: [50, "Maximum length is 50"],
     },
     last_name: {
       type: String,
       required: [true, "Last name is required"],
-      maxLength: [50, "Maximum length is 50"],
     },
     suffix: {
       type: String,
@@ -40,6 +37,16 @@ const personSchema = new Schema(
     is_active: {
       type: Boolean,
       default: true,
+    },
+
+    // ─── OWNERSHIP ───────────────────────────────────────────────────────────
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updated_by: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
