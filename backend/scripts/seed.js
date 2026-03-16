@@ -9,11 +9,25 @@
  * created (upsert semantics where possible, otherwise skip-if-exists).
  *
  * Records created:
- *   - 1 admin user  (credentials from ADMIN_EMAIL / ADMIN_PASSWORD env vars)
- *   - 3 audiences
- *   - 3 plans
- *   - 3 topics
- *   - 9 contact pathways (one per audience × plan × topic combination, all published)
+ *   Users:
+ *     - 1 admin        (ADMIN_EMAIL / ADMIN_PASSWORD env vars)
+ *     - 1 super user   (superuser@example.com / SuperUser!Demo1)
+ *     - 1 regular user (member@example.com   / Member!Demo1234)
+ *
+ *   Reference data:
+ *     - 4 audiences  (3 active, 1 inactive — tests widget active-only filter)
+ *     - 4 plans      (3 active, 1 inactive)
+ *     - 4 topics     (3 active, 1 inactive)
+ *
+ *   Pathways (from 27 active A×P×T combinations):
+ *     - 20 published  (including 1 delegated-vendor pathway)
+ *     - 4  draft      (Commercial PPO + all topics; Commercial HMO + Auth)
+ *     - 3  uncovered  (Commercial EPO — not created)
+ *     Tests: content-audit filters, pathway-coverage counts, widget routing
+ *
+ *   PathwayEvents (~155 events spread over the last 30 days):
+ *     Distributed unevenly across pathways/audiences/plans/topics so that
+ *     report rankings (top-pathways, top-topics, etc.) return meaningful data.
  */
 
 import dotenv from "dotenv";
@@ -26,6 +40,7 @@ import Audience from "../models/audienceModel.js";
 import Plan from "../models/planModel.js";
 import Topic from "../models/topicModel.js";
 import ContactPathway from "../models/contactPathwayModel.js";
+import PathwayEvent from "../models/pathwayEventModel.js";
 
 dotenv.config({ path: "./.env" });
 
@@ -56,83 +71,250 @@ const MONGO_URI = `mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}/$
 
 // ─── SEED DATA ────────────────────────────────────────────────────────────────
 
+// 3 active + 1 inactive — tests that widget returns only active records
 const AUDIENCES = [
   { name: "Medicare Member", sort_order: 1, is_active: true },
   { name: "Medicaid Member", sort_order: 2, is_active: true },
   { name: "Commercial Member", sort_order: 3, is_active: true },
+  { name: "Retired Employee", sort_order: 4, is_active: false },
 ];
 
 const PLANS = [
   { name: "HMO", sort_order: 1, is_active: true },
   { name: "PPO", sort_order: 2, is_active: true },
   { name: "EPO", sort_order: 3, is_active: true },
+  { name: "HDHP", sort_order: 4, is_active: false },
 ];
 
 const TOPICS = [
   { name: "Benefits & Coverage", sort_order: 1, is_active: true },
   { name: "Claims & Billing", sort_order: 2, is_active: true },
   { name: "Prior Authorization", sort_order: 3, is_active: true },
+  { name: "Prescription Drug", sort_order: 4, is_active: false },
 ];
 
-// Pathway contact details indexed by [audienceIndex][planIndex][topicIndex]
-const PATHWAY_DETAILS = [
-  // Medicare Members
+/**
+ * Pathway definitions for the 3 active audiences × 3 active plans × 3 active topics.
+ *
+ * status: "published" | "draft" | null (null = do not create → uncovered)
+ *
+ * Coverage breakdown:
+ *   Medicare  (A0): all 9 → published
+ *   Medicaid  (A1): all 9 → published
+ *   Commercial (A2):
+ *     HMO + Benefits  (P0,T0): published
+ *     HMO + Claims    (P0,T1): published  (delegated to a vendor)
+ *     HMO + Auth      (P0,T2): draft
+ *     PPO + Benefits  (P1,T0): draft
+ *     PPO + Claims    (P1,T1): draft
+ *     PPO + Auth      (P1,T2): draft
+ *     EPO + *         (P2,*)  : null → uncovered (tests pathway-coverage gaps)
+ *
+ * Total: 20 published | 4 draft | 3 uncovered
+ */
+const PATHWAY_SPECS = [
+  // ── Medicare Member (A0) ───────────────────────────────────────────────────
   [
-    // HMO
+    // HMO (P0)
     [
-      { department: "Medicare HMO Benefits", phone: "1-800-555-0101" },
-      { department: "Medicare HMO Claims", phone: "1-800-555-0102" },
-      { department: "Medicare HMO Auth", phone: "1-800-555-0103" },
+      {
+        status: "published",
+        department: "Medicare HMO Benefits",
+        phone: "1-800-555-0101",
+        fax: "1-800-555-0102",
+      },
+      {
+        status: "published",
+        department: "Medicare HMO Claims",
+        phone: "1-800-555-0103",
+        notes: "Available Mon–Fri 8am–8pm ET",
+      },
+      {
+        status: "published",
+        department: "Medicare HMO Auth",
+        phone: "1-800-555-0104",
+      },
     ],
-    // PPO
+    // PPO (P1)
     [
-      { department: "Medicare PPO Benefits", phone: "1-800-555-0111" },
-      { department: "Medicare PPO Claims", phone: "1-800-555-0112" },
-      { department: "Medicare PPO Auth", phone: "1-800-555-0113" },
+      {
+        status: "published",
+        department: "Medicare PPO Benefits",
+        phone: "1-800-555-0111",
+      },
+      {
+        status: "published",
+        department: "Medicare PPO Claims",
+        phone: "1-800-555-0112",
+        fax: "1-800-555-0113",
+      },
+      {
+        status: "published",
+        department: "Medicare PPO Auth",
+        phone: "1-800-555-0114",
+        notes: "Urgent auth: use fax",
+      },
     ],
-    // EPO
+    // EPO (P2)
     [
-      { department: "Medicare EPO Benefits", phone: "1-800-555-0121" },
-      { department: "Medicare EPO Claims", phone: "1-800-555-0122" },
-      { department: "Medicare EPO Auth", phone: "1-800-555-0123" },
+      {
+        status: "published",
+        department: "Medicare EPO Benefits",
+        phone: "1-800-555-0121",
+      },
+      {
+        status: "published",
+        department: "Medicare EPO Claims",
+        phone: "1-800-555-0122",
+      },
+      {
+        status: "published",
+        department: "Medicare EPO Auth",
+        phone: "1-800-555-0123",
+      },
     ],
   ],
-  // Medicaid Members
+  // ── Medicaid Member (A1) ───────────────────────────────────────────────────
   [
+    // HMO (P0)
     [
-      { department: "Medicaid HMO Benefits", phone: "1-800-555-0201" },
-      { department: "Medicaid HMO Claims", phone: "1-800-555-0202" },
-      { department: "Medicaid HMO Auth", phone: "1-800-555-0203" },
+      {
+        status: "published",
+        department: "Medicaid HMO Benefits",
+        phone: "1-800-555-0201",
+      },
+      {
+        status: "published",
+        department: "Medicaid HMO Claims",
+        phone: "1-800-555-0202",
+        notes: "Also handles coordination of benefits",
+      },
+      {
+        status: "published",
+        department: "Medicaid HMO Auth",
+        phone: "1-800-555-0203",
+      },
     ],
+    // PPO (P1)
     [
-      { department: "Medicaid PPO Benefits", phone: "1-800-555-0211" },
-      { department: "Medicaid PPO Claims", phone: "1-800-555-0212" },
-      { department: "Medicaid PPO Auth", phone: "1-800-555-0213" },
+      {
+        status: "published",
+        department: "Medicaid PPO Benefits",
+        phone: "1-800-555-0211",
+      },
+      {
+        status: "published",
+        department: "Medicaid PPO Claims",
+        phone: "1-800-555-0212",
+      },
+      {
+        status: "published",
+        department: "Medicaid PPO Auth",
+        phone: "1-800-555-0213",
+      },
     ],
+    // EPO (P2)
     [
-      { department: "Medicaid EPO Benefits", phone: "1-800-555-0221" },
-      { department: "Medicaid EPO Claims", phone: "1-800-555-0222" },
-      { department: "Medicaid EPO Auth", phone: "1-800-555-0223" },
+      {
+        status: "published",
+        department: "Medicaid EPO Benefits",
+        phone: "1-800-555-0221",
+      },
+      {
+        status: "published",
+        department: "Medicaid EPO Claims",
+        phone: "1-800-555-0222",
+      },
+      {
+        status: "published",
+        department: "Medicaid EPO Auth",
+        phone: "1-800-555-0223",
+      },
     ],
   ],
-  // Commercial Members
+  // ── Commercial Member (A2) ────────────────────────────────────────────────
   [
+    // HMO (P0)
     [
-      { department: "Commercial HMO Benefits", phone: "1-800-555-0301" },
-      { department: "Commercial HMO Claims", phone: "1-800-555-0302" },
-      { department: "Commercial HMO Auth", phone: "1-800-555-0303" },
+      {
+        status: "published",
+        department: "Commercial HMO Benefits",
+        phone: "1-800-555-0301",
+      },
+      // Delegated pathway — tests is_delegated + vendor_name fields
+      {
+        status: "published",
+        department: "Commercial HMO Claims",
+        phone: "1-800-555-0302",
+        is_delegated: true,
+        vendor_name: "Acme Claims Solutions",
+        notes:
+          "Handled by third-party vendor; escalate unresolved claims to internal team",
+      },
+      {
+        status: "draft",
+        department: "Commercial HMO Auth",
+        phone: "1-800-555-0303",
+      },
     ],
+    // PPO (P1)
     [
-      { department: "Commercial PPO Benefits", phone: "1-800-555-0311" },
-      { department: "Commercial PPO Claims", phone: "1-800-555-0312" },
-      { department: "Commercial PPO Auth", phone: "1-800-555-0313" },
+      {
+        status: "draft",
+        department: "Commercial PPO Benefits",
+        phone: "1-800-555-0311",
+      },
+      {
+        status: "draft",
+        department: "Commercial PPO Claims",
+        phone: "1-800-555-0312",
+      },
+      {
+        status: "draft",
+        department: "Commercial PPO Auth",
+        phone: "1-800-555-0313",
+      },
     ],
-    [
-      { department: "Commercial EPO Benefits", phone: "1-800-555-0321" },
-      { department: "Commercial EPO Claims", phone: "1-800-555-0322" },
-      { department: "Commercial EPO Auth", phone: "1-800-555-0323" },
-    ],
+    // EPO (P2) — intentionally uncovered to test pathway-coverage report
+    [null, null, null],
   ],
+];
+
+/**
+ * PathwayEvent distribution for report endpoints.
+ *
+ * Each entry: [audienceIndex, planIndex, topicIndex, eventCount]
+ * Spread over the last 30 days so pathway-views time-series is non-trivial.
+ *
+ * Medicare HMO Claims (#1 overall) → most popular in top-pathways
+ * Medicare HMO Benefits (#2)
+ * Claims & Billing (#1 topic overall)
+ * Medicare (#1 audience)
+ * HMO (#1 plan)
+ */
+const EVENT_DISTRIBUTION = [
+  // Medicare HMO
+  [0, 0, 1, 45], // Medicare + HMO + Claims (#1 pathway)
+  [0, 0, 0, 30], // Medicare + HMO + Benefits (#2 pathway)
+  [0, 0, 2, 12], // Medicare + HMO + Auth
+  // Medicare PPO
+  [0, 1, 0, 18], // Medicare + PPO + Benefits
+  [0, 1, 1, 14], // Medicare + PPO + Claims
+  [0, 1, 2, 6], // Medicare + PPO + Auth
+  // Medicare EPO
+  [0, 2, 0, 8], // Medicare + EPO + Benefits
+  [0, 2, 1, 5], // Medicare + EPO + Claims
+  [0, 2, 2, 2], // Medicare + EPO + Auth
+  // Medicaid HMO
+  [1, 0, 0, 10], // Medicaid + HMO + Benefits
+  [1, 0, 1, 7], // Medicaid + HMO + Claims
+  [1, 0, 2, 3], // Medicaid + HMO + Auth
+  // Medicaid PPO / EPO
+  [1, 1, 0, 4], // Medicaid + PPO + Benefits
+  [1, 2, 1, 3], // Medicaid + EPO + Claims
+  // Commercial HMO (published pathways only)
+  [2, 0, 0, 5], // Commercial + HMO + Benefits
+  [2, 0, 1, 3], // Commercial + HMO + Claims (delegated)
 ];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -160,77 +342,168 @@ async function upsertByName(Model, records) {
   return results;
 }
 
+async function upsertUser(email, password, role, firstName, lastName) {
+  let user = await User.findOne({ email });
+  if (!user) {
+    const hashed = await bcrypt.hash(password, 12);
+    user = await User.create({ email, password: hashed, user_role: role });
+    await Person.create({
+      user_id: user._id,
+      first_name: firstName,
+      last_name: lastName,
+    });
+    logger.info({ message: "Created user", role, email });
+  } else {
+    logger.info({ message: "User already exists, skipping", email });
+  }
+  return user;
+}
+
+// Returns a random date within the last `days` days
+function randomPastDate(days = 30) {
+  const now = Date.now();
+  const offset = Math.floor(Math.random() * days * 24 * 60 * 60 * 1000);
+  return new Date(now - offset);
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 async function seed() {
   await mongoose.connect(MONGO_URI);
   logger.info("Connected to MongoDB");
 
-  // ── Admin user ─────────────────────────────────────────────────────────────
-  let adminUser = await User.findOne({ email: ADMIN_EMAIL });
-  if (!adminUser) {
-    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
-    adminUser = await User.create({
-      email: ADMIN_EMAIL,
-      password: hashedPassword,
-      user_role: "admin",
-    });
-    await Person.create({
-      user_id: adminUser._id,
-      first_name: ADMIN_FIRST_NAME,
-      last_name: ADMIN_LAST_NAME,
-    });
-    logger.info({ message: "Created admin user", email: ADMIN_EMAIL });
-  } else {
-    logger.info({
-      message: "Admin user already exists, skipping",
-      email: ADMIN_EMAIL,
-    });
-  }
+  // ── Users ─────────────────────────────────────────────────────────────────
+  const adminUser = await upsertUser(
+    ADMIN_EMAIL,
+    ADMIN_PASSWORD,
+    "admin",
+    ADMIN_FIRST_NAME,
+    ADMIN_LAST_NAME,
+  );
+  await upsertUser(
+    "superuser@example.com",
+    "SuperUser!Demo1",
+    "super user",
+    "Super",
+    "User",
+  );
+  await upsertUser(
+    "member@example.com",
+    "Member!Demo1234",
+    "user",
+    "Member",
+    "Demo",
+  );
 
-  // ── Reference data ─────────────────────────────────────────────────────────
+  // ── Reference data ────────────────────────────────────────────────────────
   const audiences = await upsertByName(Audience, AUDIENCES);
   const plans = await upsertByName(Plan, PLANS);
   const topics = await upsertByName(Topic, TOPICS);
 
-  // ── Contact pathways (full cartesian product, all published) ───────────────
-  let created = 0;
-  let skipped = 0;
+  // Active subsets (indices 0–2) used for pathway + event seeding
+  const activeAudiences = audiences.slice(0, 3);
+  const activePlans = plans.slice(0, 3);
+  const activeTopics = topics.slice(0, 3);
 
-  for (let ai = 0; ai < audiences.length; ai++) {
-    for (let pi = 0; pi < plans.length; pi++) {
-      for (let ti = 0; ti < topics.length; ti++) {
+  // ── Contact pathways ──────────────────────────────────────────────────────
+  let pwCreated = 0;
+  let pwSkipped = 0;
+
+  // pathwayIndex[ai][pi][ti] = pathway document (populated below)
+  const pathwayIndex = Array.from({ length: 3 }, () =>
+    Array.from({ length: 3 }, () => Array(3).fill(null)),
+  );
+
+  for (let ai = 0; ai < 3; ai++) {
+    for (let pi = 0; pi < 3; pi++) {
+      for (let ti = 0; ti < 3; ti++) {
+        const spec = PATHWAY_SPECS[ai][pi][ti];
+        if (!spec) continue; // intentionally uncovered
+
         const existing = await ContactPathway.findOne({
-          audience_id: audiences[ai]._id,
-          plan_id: plans[pi]._id,
-          topic_id: topics[ti]._id,
+          audience_id: activeAudiences[ai]._id,
+          plan_id: activePlans[pi]._id,
+          topic_id: activeTopics[ti]._id,
         });
 
         if (existing) {
-          skipped++;
+          pathwayIndex[ai][pi][ti] = existing;
+          pwSkipped++;
           continue;
         }
 
-        const { department, phone } = PATHWAY_DETAILS[ai][pi][ti];
-        const pathway = await ContactPathway.create({
-          audience_id: audiences[ai]._id,
-          plan_id: plans[pi]._id,
-          topic_id: topics[ti]._id,
+        const {
+          status,
           department,
           phone,
+          fax,
+          notes,
+          is_delegated,
+          vendor_name,
+        } = spec;
+
+        const pathway = await ContactPathway.create({
+          audience_id: activeAudiences[ai]._id,
+          plan_id: activePlans[pi]._id,
+          topic_id: activeTopics[ti]._id,
+          department,
+          phone,
+          ...(fax && { fax }),
+          ...(notes && { notes }),
+          ...(is_delegated && { is_delegated, vendor_name }),
           updated_by: adminUser._id,
         });
 
-        // Publish it
-        pathway.status = "published";
-        pathway.published_at = new Date();
-        await pathway.save();
-        created++;
+        if (status === "published") {
+          pathway.status = "published";
+          pathway.published_at = new Date();
+          await pathway.save();
+        }
+
+        pathwayIndex[ai][pi][ti] = pathway;
+        pwCreated++;
       }
     }
   }
 
-  logger.info({ message: "Pathway seeding complete", created, skipped });
+  logger.info({
+    message: "Pathways seeded",
+    created: pwCreated,
+    skipped: pwSkipped,
+  });
+
+  // ── PathwayEvents ─────────────────────────────────────────────────────────
+  const existingEventCount = await PathwayEvent.countDocuments();
+  if (existingEventCount > 0) {
+    logger.info({
+      message: "PathwayEvents already present, skipping",
+      count: existingEventCount,
+    });
+  } else {
+    let eventsCreated = 0;
+    const eventDocs = [];
+
+    for (const [ai, pi, ti, count] of EVENT_DISTRIBUTION) {
+      const pathway = pathwayIndex[ai][pi][ti];
+      if (!pathway) continue; // skip uncovered combinations
+
+      for (let i = 0; i < count; i++) {
+        eventDocs.push({
+          pathway_id: pathway._id,
+          audience_id: activeAudiences[ai]._id,
+          plan_id: activePlans[pi]._id,
+          topic_id: activeTopics[ti]._id,
+          occurred_at: randomPastDate(30),
+          ...(Math.random() < 0.3 && { embed_source: "member-portal" }),
+        });
+        eventsCreated++;
+      }
+    }
+
+    await PathwayEvent.insertMany(eventDocs);
+    logger.info({ message: "PathwayEvents seeded", created: eventsCreated });
+  }
+
   logger.info("Seed complete");
 }
 
