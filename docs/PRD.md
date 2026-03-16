@@ -421,15 +421,16 @@ All routes are prefixed `/api/v1/`. Protected routes require a valid JWT in the 
 
 ### Reporting — `/api/v1/reports`
 
-| Method | Route               | Access  | Description                                |
-| ------ | ------------------- | ------- | ------------------------------------------ |
-| GET    | `/pathway-views`    | Private | Pathway view counts over a date range      |
-| GET    | `/top-pathways`     | Private | Most frequently accessed pathways          |
-| GET    | `/top-topics`       | Private | Most frequently selected topics            |
-| GET    | `/top-audiences`    | Private | Most frequently selected audiences         |
-| GET    | `/pathway-coverage` | Private | Pathways defined vs. possible combinations |
-| GET    | `/content-audit`    | Private | Pathways in draft, published, last updated |
-| GET    | `/audit-log`        | Admin   | Full audit log across all resources        |
+| Method | Route               | Access  | Description                                 |
+| ------ | ------------------- | ------- | ------------------------------------------- |
+| GET    | `/pathway-views`    | Private | Pathway view counts over a date range       |
+| GET    | `/top-pathways`     | Private | Most frequently accessed pathways           |
+| GET    | `/top-topics`       | Private | Most frequently selected topics             |
+| GET    | `/top-audiences`    | Private | Most frequently selected audiences          |
+| GET    | `/top-plans`        | Private | Most frequently selected plan/network types |
+| GET    | `/pathway-coverage` | Private | Pathways defined vs. possible combinations  |
+| GET    | `/content-audit`    | Private | Pathways in draft, published, last updated  |
+| GET    | `/audit-log`        | Admin   | Full audit log across all resources         |
 
 ---
 
