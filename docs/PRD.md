@@ -158,14 +158,14 @@ Operational staff with read and edit access.
 
 #### User
 
-| Field           | Type    | Notes                             |
-| --------------- | ------- | --------------------------------- |
-| `email`         | String  | Required, unique, lowercase       |
-| `password_hash` | String  | bcryptjs, 10 rounds               |
-| `is_active`     | Boolean | Default `true`                    |
-| `user_role`     | String  | `user` \| `super user` \| `admin` |
-| `createdAt`     | Date    | Auto (timestamps)                 |
-| `updatedAt`     | Date    | Auto (timestamps)                 |
+| Field           | Type    | Notes                                                                                                                                             |
+| --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `email`         | String  | Required, unique, lowercase                                                                                                                       |
+| `password_hash` | String  | bcryptjs, 10 rounds. No password policy is enforced by the application — complexity requirements are a business-level decision left to operators. |
+| `is_active`     | Boolean | Default `true`                                                                                                                                    |
+| `user_role`     | String  | `user` \| `super user` \| `admin`                                                                                                                 |
+| `createdAt`     | Date    | Auto (timestamps)                                                                                                                                 |
+| `updatedAt`     | Date    | Auto (timestamps)                                                                                                                                 |
 
 > `createdAt` and `updatedAt` are Mongoose auto-timestamps that provide a lightweight on-document record of when a document was first created and last modified. They are **not** duplicates of the AuditLog — they serve different purposes. `createdAt`/`updatedAt` answer "when?" at a glance from the document itself; the AuditLog answers "who changed what and how?" via a richer separate record. Both are kept.
 
@@ -354,7 +354,6 @@ All routes are prefixed `/api/v1/`. Protected routes require a valid JWT in the 
 | PUT    | `/:id`            | Admin   | Update user account                 |
 | PUT    | `/:id/activate`   | Admin   | Activate a user account             |
 | PUT    | `/:id/deactivate` | Admin   | Deactivate a user account           |
-| DELETE | `/:id`            | Admin   | Delete a user account               |
 
 ### Persons — `/api/v1/persons`
 
@@ -457,7 +456,8 @@ The admin interface is a React single-page application served at the application
 - Create user form (email, password, role) — Person profile form follows immediately on creation
 - Edit user: role, active status
 - Activate / deactivate toggle
-- Delete user with confirmation dialog
+
+> User accounts are never permanently deleted. Deactivation is the only removal mechanism, preserving historical audit trail integrity.
 
 #### My Profile
 
