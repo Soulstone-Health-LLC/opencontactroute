@@ -10,6 +10,7 @@ import audienceRoutes from "./routes/audienceRoutes.js";
 import planRoutes from "./routes/planRoutes.js";
 import topicRoutes from "./routes/topicRoutes.js";
 import contactPathwayRoutes from "./routes/contactPathwayRoutes.js";
+import widgetRoutes from "./routes/widgetRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 
 const app = express();
@@ -49,6 +50,8 @@ app.use("/api/v1/plans", planRoutes);
 app.use("/api/v1/topics", topicRoutes);
 // Routes - Contact Pathways
 app.use("/api/v1/pathways", contactPathwayRoutes);
+// Routes - Widget (public)
+app.use("/api/v1/widget", widgetRoutes);
 // Routes - Reports
 app.use("/api/v1/reports", reportRoutes);
 
