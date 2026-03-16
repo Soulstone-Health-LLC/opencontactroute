@@ -211,9 +211,9 @@ Represents a plan or network type (e.g., Commercial, Medicare Advantage).
 
 | Field         | Type     | Notes                               |
 | ------------- | -------- | ----------------------------------- |
-| `name`        | String   | Required, unique, max 100           |
+| `name`        | String   | Required, unique                    |
 | `slug`        | String   | URL-safe identifier, auto-generated |
-| `description` | String   | Optional, max 500                   |
+| `description` | String   | Optional                            |
 | `is_active`   | Boolean  | Default `true`                      |
 | `sort_order`  | Number   | Controls display order in widget    |
 | `created_by`  | ObjectId | Ref: User                           |
