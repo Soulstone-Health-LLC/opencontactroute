@@ -8,6 +8,8 @@ import userRoutes from "./routes/userRoutes.js";
 import personRoutes from "./routes/personRoutes.js";
 import audienceRoutes from "./routes/audienceRoutes.js";
 import planRoutes from "./routes/planRoutes.js";
+import topicRoutes from "./routes/topicRoutes.js";
+import contactPathwayRoutes from "./routes/contactPathwayRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 
 const app = express();
@@ -43,6 +45,10 @@ app.use("/api/v1/persons", personRoutes);
 app.use("/api/v1/audiences", audienceRoutes);
 // Routes - Plans
 app.use("/api/v1/plans", planRoutes);
+// Routes - Topics
+app.use("/api/v1/topics", topicRoutes);
+// Routes - Contact Pathways
+app.use("/api/v1/pathways", contactPathwayRoutes);
 // Routes - Reports
 app.use("/api/v1/reports", reportRoutes);
 
