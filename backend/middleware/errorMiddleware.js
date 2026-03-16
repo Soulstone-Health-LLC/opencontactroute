@@ -1,3 +1,5 @@
+import logger from "../utils/logger.js";
+
 const notFound = (req, res, next) => {
   const error = new Error(`Not found - ${req.originalUrl}`);
   res.status(404);
@@ -19,6 +21,12 @@ const errorHandler = (err, req, res, next) => {
       .map((e) => e.message)
       .join(", ");
   }
+
+  logger.error({
+    message: err.message,
+    statusCode,
+    stack: process.env.NODE_ENV === "production" ? undefined : err.stack,
+  });
 
   res.status(statusCode).json({
     message,

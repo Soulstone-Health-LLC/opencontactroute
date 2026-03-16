@@ -2,8 +2,10 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import passport from "passport";
+import mongoose from "mongoose";
 import configurePassport from "./middleware/passportConfig.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import logger from "./utils/logger.js";
 import userRoutes from "./routes/userRoutes.js";
 import personRoutes from "./routes/personRoutes.js";
 import audienceRoutes from "./routes/audienceRoutes.js";
@@ -38,8 +40,36 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// HTTP request logging
+app.use((req, _res, next) => {
+  logger.info({
+    message: "incoming request",
+    method: req.method,
+    url: req.originalUrl,
+  });
+  next();
+});
+
 // Health check (unauthenticated, used by Docker and monitoring)
-app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+app.get("/health", (_req, res) => {
+  const dbState = mongoose.connection.readyState;
+  // 1 = connected; anything else is not fully ready
+  const dbOk = dbState === 1;
+
+  const checks = {
+    db: dbOk ? "ok" : "error",
+  };
+
+  const allOk = Object.values(checks).every((v) => v === "ok");
+  const status = allOk ? "ok" : "error";
+  const httpStatus = allOk ? 200 : 503;
+
+  res.status(httpStatus).json({
+    status,
+    uptime: Math.floor(process.uptime()),
+    checks,
+  });
+});
 
 // Routes - Users
 app.use("/api/v1/users", userRoutes);
