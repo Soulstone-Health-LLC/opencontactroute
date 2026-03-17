@@ -205,9 +205,34 @@ const deactivateUser = asyncHandler(async (req, res) => {
   });
 });
 
+// ─── ADMIN CHANGE USER PASSWORD ─────────────────────────────────────────────
+// @desc    Admin sets a new password for any user (no current password required)
+// @route   PUT /api/v1/users/:id/password
+// @access  Admin
+const adminChangePassword = asyncHandler(async (req, res) => {
+  const { new_password } = req.body;
+
+  if (!new_password) {
+    res.status(400);
+    throw new Error("new_password is required");
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  user.password_hash = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
+  user._changedBy = req.user._id;
+  await user.save();
+
+  res.status(200).json({ message: "Password updated successfully" });
+});
+
 // ─── CHANGE OWN PASSWORD ─────────────────────────────────────────────────────
 // @desc    Change authenticated user's own password
-// @route   PUT /api/v1/users/profile/password
+// @route   PUT /api/v1/users/auth/password
 // @access  Private
 const changePassword = asyncHandler(async (req, res) => {
   const { current_password, new_password } = req.body;
@@ -238,6 +263,7 @@ export {
   logoutUser,
   userProfile,
   changePassword,
+  adminChangePassword,
   getUsers,
   getUserById,
   updateUser,

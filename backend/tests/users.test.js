@@ -514,7 +514,95 @@ describe("PUT /api/v1/users/:id/deactivate", () => {
   });
 });
 
-// ─── PUT /auth/password ───────────────────────────────────────────────────
+// ─── PUT /:id/password (admin change user password) ──────────────────────────
+
+describe("PUT /api/v1/users/:id/password", () => {
+  let adminToken;
+  let targetId;
+  const targetEmail = "adminpw.target@example.com";
+  const targetPassword = "Original123!";
+
+  beforeEach(async () => {
+    await request(app).post(`${BASE}/register`).send({
+      email: "adminpw.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
+    adminToken = await createAndAuthUser(
+      "adminpw.admin@example.com",
+      "Password123!",
+    );
+
+    const target = await request(app)
+      .post(`${BASE}/register`)
+      .send({ email: targetEmail, password: targetPassword });
+    targetId = target.body._id;
+  });
+
+  it("returns 200 and success message when admin sets new password", async () => {
+    const res = await request(app)
+      .put(`${BASE}/${targetId}/password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ new_password: "AdminSet@789!" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/password updated/i);
+  });
+
+  it("target user can log in with the new password", async () => {
+    await request(app)
+      .put(`${BASE}/${targetId}/password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ new_password: "AdminSet@789!" });
+
+    const loginRes = await request(app)
+      .post(`${BASE}/auth`)
+      .send({ email: targetEmail, password: "AdminSet@789!" });
+
+    expect(loginRes.status).toBe(200);
+  });
+
+  it("returns 400 when new_password is missing", async () => {
+    const res = await request(app)
+      .put(`${BASE}/${targetId}/password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/required/i);
+  });
+
+  it("returns 404 for non-existent user ID", async () => {
+    const res = await request(app)
+      .put(`${BASE}/000000000000000000000000/password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ new_password: "AdminSet@789!" });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 for non-admin user", async () => {
+    const userToken = await createAndAuthUser(
+      "adminpw.regular@example.com",
+      "Password123!",
+    );
+
+    const res = await request(app)
+      .put(`${BASE}/${targetId}/password`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ new_password: "AdminSet@789!" });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 401 when not authenticated", async () => {
+    const res = await request(app)
+      .put(`${BASE}/${targetId}/password`)
+      .send({ new_password: "AdminSet@789!" });
+
+    expect(res.status).toBe(401);
+  });
+});
 
 describe("PUT /api/v1/users/auth/password", () => {
   const email = "pwchange@example.com";

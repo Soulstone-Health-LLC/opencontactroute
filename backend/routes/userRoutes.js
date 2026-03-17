@@ -5,6 +5,7 @@ import {
   logoutUser,
   userProfile,
   changePassword,
+  adminChangePassword,
   getUsers,
   getUserById,
   updateUser,
@@ -25,9 +26,10 @@ router.post("/logout", protect, logoutUser);
 router.put("/auth/password", protect, changePassword);
 router.get("/profile", protect, userProfile);
 
-// ─── ADMIN ROUTES — activate/deactivate before /:id to avoid route shadowing ──
+// ─── ADMIN ROUTES — activate/deactivate/password before /:id to avoid route shadowing ──
 router.put("/:id/activate", protect, requireRole("admin"), activateUser);
 router.put("/:id/deactivate", protect, requireRole("admin"), deactivateUser);
+router.put("/:id/password", protect, requireRole("admin"), adminChangePassword);
 
 router.route("/").get(protect, requireRole("admin"), getUsers);
 
