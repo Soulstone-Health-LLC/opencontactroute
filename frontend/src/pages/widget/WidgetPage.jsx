@@ -7,6 +7,7 @@ import {
   getWidgetPathway,
   postWidgetEvent,
 } from "../../services/widgetService";
+import { useSiteConfig } from "../../hooks/useSiteConfig";
 
 // ─── STEP INDICATOR ───────────────────────────────────────────────────────────
 function StepIndicator({ step }) {
@@ -157,6 +158,7 @@ function PathwayResult({ pathway, onReset }) {
 export default function WidgetPage() {
   const [searchParams] = useSearchParams();
   const embedSource = searchParams.get("source") ?? "direct";
+  const { siteConfig } = useSiteConfig();
 
   const [step, setStep] = useState(1);
   const [audiences, setAudiences] = useState([]);
@@ -268,6 +270,9 @@ export default function WidgetPage() {
   return (
     <div style={{ maxWidth: 560 }} className="mx-auto">
       <h2 className="h4 mb-1">Contact Support Directory</h2>
+      {siteConfig.org_name && (
+        <p className="text-muted small mb-1">{siteConfig.org_name}</p>
+      )}
       <p className="text-muted small mb-4">
         Answer three quick questions to find the right contact.
       </p>

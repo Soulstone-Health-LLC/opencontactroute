@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { toast } from "react-toastify";
 import SettingsPage from "./SettingsPage";
+import * as settingsService from "../../../services/settingsService";
 
 // jsdom doesn't implement clipboard — stub it so component doesn't throw
 Object.defineProperty(navigator, "clipboard", {
@@ -11,7 +12,18 @@ Object.defineProperty(navigator, "clipboard", {
   configurable: true,
 });
 
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn() } }));
+vi.mock("react-toastify", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+vi.mock("../../../services/settingsService");
+vi.mock("../../../hooks/useSiteConfig", () => ({
+  useSiteConfig: () => ({ reloadSiteConfig: vi.fn() }),
+}));
+
+const mockConfig = {
+  org_name: "Test Org",
+  primary_color: "#123456",
+};
 
 function renderSettings() {
   return render(<SettingsPage />);
@@ -20,6 +32,12 @@ function renderSettings() {
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(settingsService, "getSiteConfig").mockResolvedValue({
+      data: mockConfig,
+    });
+    vi.spyOn(settingsService, "updateSiteConfig").mockResolvedValue({
+      data: mockConfig,
+    });
   });
 
   describe("Layout", () => {
@@ -136,6 +154,116 @@ describe("SettingsPage", () => {
         expect(toast.success).toHaveBeenCalledWith(
           "Embed code copied to clipboard.",
         ),
+      );
+    });
+  });
+
+  describe("Instance & Branding", () => {
+    it("renders the Instance & Branding card", async () => {
+      renderSettings();
+      await waitFor(() =>
+        expect(screen.getByText(/instance & branding/i)).toBeInTheDocument(),
+      );
+    });
+
+    it("renders the Organization Name input", async () => {
+      renderSettings();
+      await waitFor(() =>
+        expect(screen.getByLabelText(/organization name/i)).toBeInTheDocument(),
+      );
+    });
+
+    it("renders the Primary Color picker", async () => {
+      renderSettings();
+      await waitFor(() =>
+        expect(screen.getByLabelText("Primary Color")).toBeInTheDocument(),
+      );
+    });
+
+    it("pre-populates inputs with loaded config values", async () => {
+      renderSettings();
+      await waitFor(() =>
+        expect(screen.getByLabelText(/organization name/i)).toHaveValue(
+          "Test Org",
+        ),
+      );
+      expect(screen.getByLabelText(/primary color hex value/i)).toHaveValue(
+        "#123456",
+      );
+    });
+
+    it("renders the Save Settings button", async () => {
+      renderSettings();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /save settings/i }),
+        ).toBeInTheDocument(),
+      );
+    });
+
+    it("calls updateSiteConfig on form submit", async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /save settings/i }),
+        ).toBeInTheDocument(),
+      );
+
+      await user.click(screen.getByRole("button", { name: /save settings/i }));
+
+      await waitFor(() =>
+        expect(settingsService.updateSiteConfig).toHaveBeenCalledWith(
+          expect.objectContaining({ org_name: "Test Org" }),
+        ),
+      );
+    });
+
+    it("shows a success toast after saving", async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /save settings/i }),
+        ).toBeInTheDocument(),
+      );
+
+      await user.click(screen.getByRole("button", { name: /save settings/i }));
+
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith("Settings saved."),
+      );
+    });
+
+    it("shows an error toast when save fails", async () => {
+      vi.spyOn(settingsService, "updateSiteConfig").mockRejectedValue(
+        new Error("Network Error"),
+      );
+      const user = userEvent.setup();
+      renderSettings();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /save settings/i }),
+        ).toBeInTheDocument(),
+      );
+
+      await user.click(screen.getByRole("button", { name: /save settings/i }));
+
+      await waitFor(() =>
+        expect(toast.error).toHaveBeenCalledWith("Failed to save settings."),
+      );
+    });
+
+    it("shows an error alert when loading config fails", async () => {
+      vi.spyOn(settingsService, "getSiteConfig").mockRejectedValue(
+        new Error("Network Error"),
+      );
+      renderSettings();
+      await waitFor(() =>
+        expect(screen.getByRole("alert")).toBeInTheDocument(),
+      );
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /failed to load settings/i,
       );
     });
   });

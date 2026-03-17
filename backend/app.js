@@ -14,6 +14,7 @@ import topicRoutes from "./routes/topicRoutes.js";
 import contactPathwayRoutes from "./routes/contactPathwayRoutes.js";
 import widgetRoutes from "./routes/widgetRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 
 const app = express();
 
@@ -87,6 +88,8 @@ app.use("/api/v1/pathways", contactPathwayRoutes);
 app.use("/api/v1/widget", widgetRoutes);
 // Routes - Reports
 app.use("/api/v1/reports", reportRoutes);
+// Routes - Settings
+app.use("/api/v1/settings", settingsRoutes);
 
 // Error handling
 app.use(notFound);

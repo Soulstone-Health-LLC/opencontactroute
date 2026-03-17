@@ -5,6 +5,16 @@ import { vi } from "vitest";
 import WidgetPage from "./WidgetPage";
 import * as widgetService from "../../services/widgetService";
 
+vi.mock("../../hooks/useSiteConfig", () => ({
+  useSiteConfig: () => ({
+    siteConfig: {
+      instance_name: "OpenContactRoute",
+      org_name: "",
+      primary_color: "#0d6efd",
+    },
+  }),
+}));
+
 const mockAudiences = [
   { _id: "a1", name: "Employer", description: "Employer group" },
   { _id: "a2", name: "Individual", description: "" },
