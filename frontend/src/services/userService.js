@@ -1,5 +1,6 @@
 import api from "./api";
 
+export const changePassword = (data) => api.put("/users/auth/password", data);
 export const getUsers = () => api.get("/users");
 export const getUser = (id) => api.get(`/users/${id}`);
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);

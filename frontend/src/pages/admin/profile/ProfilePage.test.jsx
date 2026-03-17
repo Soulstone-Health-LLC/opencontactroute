@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import { toast } from "react-toastify";
 import ProfilePage from "./ProfilePage";
 import * as personService from "../../../services/personService";
+import * as userService from "../../../services/userService";
 
 vi.mock("react-toastify", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -38,6 +39,9 @@ function setupMocks(personResponse = mockPerson) {
   vi.spyOn(personService, "createPerson").mockResolvedValue({
     data: personResponse,
   });
+  vi.spyOn(userService, "changePassword").mockResolvedValue({
+    data: { message: "Password updated successfully" },
+  });
 }
 
 function setup404() {
@@ -49,6 +53,9 @@ function setup404() {
   });
   vi.spyOn(personService, "createPerson").mockResolvedValue({
     data: mockPerson,
+  });
+  vi.spyOn(userService, "changePassword").mockResolvedValue({
+    data: { message: "Password updated successfully" },
   });
 }
 
@@ -207,6 +214,135 @@ describe("ProfilePage", () => {
           }),
         );
         expect(toast.success).toHaveBeenCalledWith("Profile saved.");
+      });
+    });
+  });
+
+  describe("Change Password", () => {
+    const VALID_NEW_PW = "NewSecure@456!";
+
+    it("renders the Change Password card", () => {
+      setupMocks();
+      renderPage();
+      expect(
+        screen.getByRole("button", { name: /change password/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^new password/i)).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/confirm new password/i),
+      ).toBeInTheDocument();
+    });
+
+    it("calls changePassword and shows success toast on valid submit", async () => {
+      setupMocks();
+      renderPage();
+
+      await userEvent.type(
+        screen.getByLabelText(/current password/i),
+        "OldPass123!",
+      );
+      await userEvent.type(
+        screen.getByLabelText(/^new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.type(
+        screen.getByLabelText(/confirm new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: /change password/i }),
+      );
+
+      await waitFor(() => {
+        expect(userService.changePassword).toHaveBeenCalledWith({
+          current_password: "OldPass123!",
+          new_password: VALID_NEW_PW,
+        });
+        expect(toast.success).toHaveBeenCalledWith(
+          "Password changed successfully.",
+        );
+      });
+    });
+
+    it("clears fields after successful change", async () => {
+      setupMocks();
+      renderPage();
+
+      await userEvent.type(
+        screen.getByLabelText(/current password/i),
+        "OldPass123!",
+      );
+      await userEvent.type(
+        screen.getByLabelText(/^new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.type(
+        screen.getByLabelText(/confirm new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: /change password/i }),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/current password/i)).toHaveValue("");
+        expect(screen.getByLabelText(/^new password/i)).toHaveValue("");
+        expect(screen.getByLabelText(/confirm new password/i)).toHaveValue("");
+      });
+    });
+
+    it("shows inline error when passwords do not match", async () => {
+      setupMocks();
+      renderPage();
+
+      await userEvent.type(
+        screen.getByLabelText(/current password/i),
+        "OldPass123!",
+      );
+      await userEvent.type(
+        screen.getByLabelText(/^new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.type(
+        screen.getByLabelText(/confirm new password/i),
+        "DifferentPass1!",
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: /change password/i }),
+      );
+
+      expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+      expect(userService.changePassword).not.toHaveBeenCalled();
+    });
+
+    it("shows API error message when backend rejects the request", async () => {
+      setupMocks();
+      vi.spyOn(userService, "changePassword").mockRejectedValue({
+        response: { data: { message: "Current password is incorrect" } },
+      });
+      renderPage();
+
+      await userEvent.type(
+        screen.getByLabelText(/current password/i),
+        "WrongPass1!",
+      );
+      await userEvent.type(
+        screen.getByLabelText(/^new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.type(
+        screen.getByLabelText(/confirm new password/i),
+        VALID_NEW_PW,
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: /change password/i }),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/current password is incorrect/i),
+        ).toBeInTheDocument();
       });
     });
   });

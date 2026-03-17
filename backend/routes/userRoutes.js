@@ -4,6 +4,7 @@ import {
   authUser,
   logoutUser,
   userProfile,
+  changePassword,
   getUsers,
   getUserById,
   updateUser,
@@ -21,6 +22,7 @@ router.post("/register", registerUser);
 
 // ─── PROTECTED ROUTES ─────────────────────────────────────────────────────────
 router.post("/logout", protect, logoutUser);
+router.put("/auth/password", protect, changePassword);
 router.get("/profile", protect, userProfile);
 
 // ─── ADMIN ROUTES — activate/deactivate before /:id to avoid route shadowing ──

@@ -205,11 +205,39 @@ const deactivateUser = asyncHandler(async (req, res) => {
   });
 });
 
+// ─── CHANGE OWN PASSWORD ─────────────────────────────────────────────────────
+// @desc    Change authenticated user's own password
+// @route   PUT /api/v1/users/profile/password
+// @access  Private
+const changePassword = asyncHandler(async (req, res) => {
+  const { current_password, new_password } = req.body;
+
+  if (!current_password || !new_password) {
+    res.status(400);
+    throw new Error("current_password and new_password are required");
+  }
+
+  const user = await User.findById(req.user._id);
+
+  const isMatch = await bcrypt.compare(current_password, user.password_hash);
+  if (!isMatch) {
+    res.status(400);
+    throw new Error("Current password is incorrect");
+  }
+
+  user.password_hash = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
+  user._changedBy = req.user._id;
+  await user.save();
+
+  res.status(200).json({ message: "Password updated successfully" });
+});
+
 export {
   registerUser,
   authUser,
   logoutUser,
   userProfile,
+  changePassword,
   getUsers,
   getUserById,
   updateUser,

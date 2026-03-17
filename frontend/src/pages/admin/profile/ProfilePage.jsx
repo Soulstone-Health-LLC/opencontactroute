@@ -6,6 +6,7 @@ import {
   updatePersonProfile,
   createPerson,
 } from "../../../services/personService";
+import { changePassword } from "../../../services/userService";
 
 const SUFFIXES = ["Jr.", "Sr.", "II", "III", "IV", "V", "MD", "PhD", "Esq."];
 
@@ -30,6 +31,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const [pwForm, setPwForm] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [pwError, setPwError] = useState(null);
+  const [pwSaving, setPwSaving] = useState(false);
 
   useEffect(() => {
     getPersonProfile()
@@ -56,6 +65,39 @@ export default function ProfilePage() {
 
   function handleField(field) {
     return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  }
+
+  function handlePwField(field) {
+    return (e) => setPwForm((prev) => ({ ...prev, [field]: e.target.value }));
+  }
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    setPwError(null);
+
+    if (pwForm.new_password !== pwForm.confirm_password) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+
+    setPwSaving(true);
+    try {
+      await changePassword({
+        current_password: pwForm.current_password,
+        new_password: pwForm.new_password,
+      });
+      setPwForm({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
+      toast.success("Password changed successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message ?? "Failed to change password.";
+      setPwError(msg);
+    } finally {
+      setPwSaving(false);
+    }
   }
 
   async function handleSave(e) {
@@ -202,6 +244,75 @@ export default function ProfilePage() {
               </div>
             </form>
           )}
+        </div>
+      </div>
+
+      {/* ── Change Password ───────────────────────────────────────── */}
+      <div className="card mt-4">
+        <div className="card-header fw-semibold">Change Password</div>
+        <div className="card-body">
+          {pwError && (
+            <div className="alert alert-danger" role="alert">
+              {pwError}
+            </div>
+          )}
+          <form onSubmit={handleChangePassword} noValidate>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label" htmlFor="current-password">
+                  Current Password <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="current-password"
+                  type="password"
+                  className="form-control"
+                  value={pwForm.current_password}
+                  onChange={handlePwField("current_password")}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
+            <div className="row g-3 mt-1">
+              <div className="col-md-6">
+                <label className="form-label" htmlFor="new-password">
+                  New Password <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  className="form-control"
+                  value={pwForm.new_password}
+                  onChange={handlePwField("new_password")}
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label" htmlFor="confirm-password">
+                  Confirm New Password <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  className="form-control"
+                  value={pwForm.confirm_password}
+                  onChange={handlePwField("confirm_password")}
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={pwSaving}
+              >
+                {pwSaving ? "Saving…" : "Change Password"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

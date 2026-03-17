@@ -204,13 +204,11 @@ describe("GET /api/v1/users/", () => {
   let adminToken;
 
   beforeEach(async () => {
-    await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "list.admin@example.com",
-        password: "Password123!",
-        user_role: "admin",
-      });
+    await request(app).post(`${BASE}/register`).send({
+      email: "list.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
     adminToken = await createAndAuthUser(
       "list.admin@example.com",
       "Password123!",
@@ -269,13 +267,11 @@ describe("GET /api/v1/users/:id", () => {
   let targetId;
 
   beforeEach(async () => {
-    await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "getid.admin@example.com",
-        password: "Password123!",
-        user_role: "admin",
-      });
+    await request(app).post(`${BASE}/register`).send({
+      email: "getid.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
     adminToken = await createAndAuthUser(
       "getid.admin@example.com",
       "Password123!",
@@ -327,13 +323,11 @@ describe("PUT /api/v1/users/:id", () => {
   let targetId;
 
   beforeEach(async () => {
-    await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "upd.admin@example.com",
-        password: "Password123!",
-        user_role: "admin",
-      });
+    await request(app).post(`${BASE}/register`).send({
+      email: "upd.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
     adminToken = await createAndAuthUser(
       "upd.admin@example.com",
       "Password123!",
@@ -396,25 +390,21 @@ describe("PUT /api/v1/users/:id/activate", () => {
   let targetId;
 
   beforeEach(async () => {
-    await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "act.admin@example.com",
-        password: "Password123!",
-        user_role: "admin",
-      });
+    await request(app).post(`${BASE}/register`).send({
+      email: "act.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
     adminToken = await createAndAuthUser(
       "act.admin@example.com",
       "Password123!",
     );
 
-    const target = await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "act.target@example.com",
-        password: "Password123!",
-        is_active: false,
-      });
+    const target = await request(app).post(`${BASE}/register`).send({
+      email: "act.target@example.com",
+      password: "Password123!",
+      is_active: false,
+    });
     targetId = target.body._id;
   });
 
@@ -456,13 +446,11 @@ describe("PUT /api/v1/users/:id/deactivate", () => {
   let targetId;
 
   beforeEach(async () => {
-    await request(app)
-      .post(`${BASE}/register`)
-      .send({
-        email: "deact.admin@example.com",
-        password: "Password123!",
-        user_role: "admin",
-      });
+    await request(app).post(`${BASE}/register`).send({
+      email: "deact.admin@example.com",
+      password: "Password123!",
+      user_role: "admin",
+    });
     adminToken = await createAndAuthUser(
       "deact.admin@example.com",
       "Password123!",
@@ -523,5 +511,80 @@ describe("PUT /api/v1/users/:id/deactivate", () => {
 
     // No delete route exists — Express notFound middleware returns 404
     expect(res.status).toBe(404);
+  });
+});
+
+// ─── PUT /auth/password ───────────────────────────────────────────────────
+
+describe("PUT /api/v1/users/auth/password", () => {
+  const email = "pwchange@example.com";
+  const originalPassword = "Password123!";
+  const newPassword = "NewSecure@456!";
+
+  let token;
+
+  beforeEach(async () => {
+    token = await createAndAuthUser(email, originalPassword);
+  });
+
+  it("returns 200 and success message when password is changed", async () => {
+    const res = await request(app)
+      .put(`${BASE}/auth/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ current_password: originalPassword, new_password: newPassword });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/password updated/i);
+  });
+
+  it("allows login with the new password after change", async () => {
+    await request(app)
+      .put(`${BASE}/auth/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ current_password: originalPassword, new_password: newPassword });
+
+    const loginRes = await request(app)
+      .post(`${BASE}/auth`)
+      .send({ email, password: newPassword });
+
+    expect(loginRes.status).toBe(200);
+  });
+
+  it("returns 400 when current_password is wrong", async () => {
+    const res = await request(app)
+      .put(`${BASE}/auth/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ current_password: "WrongPassword1!", new_password: newPassword });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/current password is incorrect/i);
+  });
+
+  it("returns 400 when current_password is missing", async () => {
+    const res = await request(app)
+      .put(`${BASE}/auth/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ new_password: newPassword });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/required/i);
+  });
+
+  it("returns 400 when new_password is missing", async () => {
+    const res = await request(app)
+      .put(`${BASE}/auth/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ current_password: originalPassword });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/required/i);
+  });
+
+  it("returns 401 when not authenticated", async () => {
+    const res = await request(app)
+      .put(`${BASE}/auth/password`)
+      .send({ current_password: originalPassword, new_password: newPassword });
+
+    expect(res.status).toBe(401);
   });
 });
