@@ -15,7 +15,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="d-flex min-vh-100">
+    <div className="d-flex vh-100 overflow-hidden">
       <nav
         className="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white"
         style={{ width: 240 }}
@@ -79,7 +79,7 @@ export default function AdminLayout() {
           </button>
         </div>
       </nav>
-      <main className="flex-grow-1 p-4 bg-light">
+      <main className="flex-grow-1 p-4 bg-light overflow-y-auto">
         <Outlet />
       </main>
     </div>
