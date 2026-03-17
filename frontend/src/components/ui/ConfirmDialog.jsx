@@ -10,13 +10,18 @@ export default function ConfirmDialog({
   return (
     <div
       className="modal d-block"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
       tabIndex="-1"
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
     >
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">{title}</h5>
+            <h5 className="modal-title" id="confirm-dialog-title">
+              {title}
+            </h5>
             <button type="button" className="btn-close" onClick={onCancel} />
           </div>
           <div className="modal-body">

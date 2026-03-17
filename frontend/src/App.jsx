@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 import WidgetLayout from "./components/layout/WidgetLayout";
@@ -92,6 +93,11 @@ function App() {
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
     </BrowserRouter>
   );
 }
