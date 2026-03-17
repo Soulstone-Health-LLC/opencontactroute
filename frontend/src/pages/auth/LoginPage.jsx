@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { login } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
     try {
       const res = await login(form);
       setUser(res.data);
+      toast.success("Logged in successfully.");
       navigate("/admin");
     } catch (err) {
       setError(

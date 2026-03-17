@@ -1,4 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../../hooks/useAuth";
 import { logout } from "../../services/authService";
 
@@ -9,6 +10,7 @@ export default function AdminLayout() {
   const handleLogout = async () => {
     await logout();
     setUser(null);
+    toast.success("Logged out successfully.");
     navigate("/login");
   };
 
