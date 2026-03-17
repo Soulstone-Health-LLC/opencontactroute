@@ -319,12 +319,22 @@ const EVENT_DISTRIBUTION = [
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
+function generateSlug(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 async function upsertByName(Model, records) {
   const results = [];
   for (const data of records) {
     let doc = await Model.findOne({ name: data.name });
     if (!doc) {
-      doc = await Model.create(data);
+      const slug = generateSlug(data.name);
+      doc = await Model.create({ ...data, slug });
       logger.info({
         message: "Created",
         model: Model.modelName,
@@ -346,7 +356,7 @@ async function upsertUser(email, password, role, firstName, lastName) {
   let user = await User.findOne({ email });
   if (!user) {
     const hashed = await bcrypt.hash(password, 12);
-    user = await User.create({ email, password: hashed, user_role: role });
+    user = await User.create({ email, password_hash: hashed, user_role: role });
     await Person.create({
       user_id: user._id,
       first_name: firstName,
