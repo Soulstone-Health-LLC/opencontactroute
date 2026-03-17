@@ -16,4 +16,13 @@ export default defineConfig({
   preview: {
     port: 3000,
   },
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/tests/setup.js",
+    globals: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+    },
+  },
 });
