@@ -73,7 +73,7 @@ function SortableRow({ audience, canModify, onToggle, onDelete }) {
           {canModify && (
             <>
               <button
-                className={`btn btn-outline-${audience.is_active ? "warning" : "success"}`}
+                className={`btn btn-outline-${audience.is_active ? "dark" : "success"}`}
                 onClick={() => onToggle(audience)}
               >
                 {audience.is_active ? "Deactivate" : "Activate"}
@@ -123,7 +123,7 @@ function PlainRow({ audience, canModify, onToggle, onDelete }) {
           {canModify && (
             <>
               <button
-                className={`btn btn-outline-${audience.is_active ? "warning" : "success"}`}
+                className={`btn btn-outline-${audience.is_active ? "dark" : "success"}`}
                 onClick={() => onToggle(audience)}
               >
                 {audience.is_active ? "Deactivate" : "Activate"}
@@ -278,25 +278,20 @@ export default function AudiencesListPage() {
       ) : (
         <>
           <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  {!isSearching && (
-                    <th scope="col" style={{ width: "2rem" }}>
-                      <span className="visually-hidden">Drag</span>
+            {isSearching ? (
+              <table className="table table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Slug</th>
+                    <th scope="col">Sort</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Last Updated</th>
+                    <th scope="col">
+                      <span className="visually-hidden">Actions</span>
                     </th>
-                  )}
-                  <th scope="col">Name</th>
-                  <th scope="col">Slug</th>
-                  <th scope="col">Sort</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Last Updated</th>
-                  <th scope="col">
-                    <span className="visually-hidden">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              {isSearching ? (
+                  </tr>
+                </thead>
                 <tbody>
                   {pageItems.map((audience) => (
                     <PlainRow
@@ -308,12 +303,29 @@ export default function AudiencesListPage() {
                     />
                   ))}
                 </tbody>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
+              </table>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th scope="col" style={{ width: "2rem" }}>
+                        <span className="visually-hidden">Drag</span>
+                      </th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Slug</th>
+                      <th scope="col">Sort</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Last Updated</th>
+                      <th scope="col">
+                        <span className="visually-hidden">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
                   <SortableContext
                     items={pageItems.map((a) => a._id)}
                     strategy={verticalListSortingStrategy}
@@ -330,9 +342,9 @@ export default function AudiencesListPage() {
                       ))}
                     </tbody>
                   </SortableContext>
-                </DndContext>
-              )}
-            </table>
+                </table>
+              </DndContext>
+            )}
           </div>
 
           <div className="mt-3">

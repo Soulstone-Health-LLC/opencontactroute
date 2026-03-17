@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 export default function ConfirmDialog({
   show,
   title,
@@ -5,10 +7,17 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (show) dialogRef.current?.focus();
+  }, [show]);
+
   if (!show) return null;
 
   return (
     <div
+      ref={dialogRef}
       className="modal d-block"
       role="dialog"
       aria-modal="true"
@@ -22,7 +31,12 @@ export default function ConfirmDialog({
             <h5 className="modal-title" id="confirm-dialog-title">
               {title}
             </h5>
-            <button type="button" className="btn-close" onClick={onCancel} />
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Close"
+              onClick={onCancel}
+            />
           </div>
           <div className="modal-body">
             <p>{message}</p>

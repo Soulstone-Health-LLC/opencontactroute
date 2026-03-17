@@ -131,10 +131,14 @@ export default function AudienceFormPage() {
                   setForm((prev) => ({ ...prev, name: e.target.value }))
                 }
                 aria-required="true"
+                aria-invalid={fieldErrors.name ? "true" : undefined}
+                aria-describedby={fieldErrors.name ? "name-error" : undefined}
                 autoComplete="off"
               />
               {fieldErrors.name && (
-                <div className="invalid-feedback">{fieldErrors.name}</div>
+                <div className="invalid-feedback" id="name-error">
+                  {fieldErrors.name}
+                </div>
               )}
             </div>
 
@@ -166,11 +170,19 @@ export default function AudienceFormPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, sort_order: e.target.value }))
                 }
+                aria-invalid={fieldErrors.sort_order ? "true" : undefined}
+                aria-describedby={
+                  fieldErrors.sort_order
+                    ? "sort-order-error"
+                    : "sort-order-hint"
+                }
               />
               {fieldErrors.sort_order && (
-                <div className="invalid-feedback">{fieldErrors.sort_order}</div>
+                <div className="invalid-feedback" id="sort-order-error">
+                  {fieldErrors.sort_order}
+                </div>
               )}
-              <div className="form-text">
+              <div className="form-text" id="sort-order-hint">
                 Controls display order. Lower numbers appear first.
               </div>
             </div>
@@ -188,11 +200,12 @@ export default function AudienceFormPage() {
                       is_active: e.target.checked,
                     }))
                   }
+                  aria-describedby="is-active-hint"
                 />
                 <label htmlFor="is_active" className="form-check-label">
                   Active
                 </label>
-                <div className="form-text">
+                <div className="form-text" id="is-active-hint">
                   Inactive audiences are hidden from the widget.
                 </div>
               </div>
