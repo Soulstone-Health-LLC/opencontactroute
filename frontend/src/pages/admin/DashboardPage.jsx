@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { getAudiences } from "../../services/audienceService";
 import { getPlans } from "../../services/planService";
 import { getTopics } from "../../services/topicService";
 import { getPathways } from "../../services/pathwayService";
-import { getContentAudit } from "../../services/reportService";
+import { getContentAudit, getPathwayViews } from "../../services/reportService";
 
 function StatCard({ title, value, loading, to }) {
   return (
@@ -44,6 +54,8 @@ export default function DashboardPage() {
     topics: 0,
   });
   const [recentPathways, setRecentPathways] = useState([]);
+  const [viewsData, setViewsData] = useState([]);
+  const [viewsLoading, setViewsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -67,9 +79,9 @@ export default function DashboardPage() {
 
         setCounts({
           publishedPathways,
-          audiences: audiencesRes.data.length,
-          plans: plansRes.data.length,
-          topics: topicsRes.data.length,
+          audiences: audiencesRes.data.filter((a) => a.is_active).length,
+          plans: plansRes.data.filter((p) => p.is_active).length,
+          topics: topicsRes.data.filter((t) => t.is_active).length,
         });
 
         setRecentPathways(auditRes.data.data.slice(0, 5));
@@ -80,7 +92,28 @@ export default function DashboardPage() {
       }
     }
 
+    async function fetchViews() {
+      setViewsLoading(true);
+      try {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 29);
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        const res = await getPathwayViews({
+          start_date: fmt(start),
+          end_date: fmt(end),
+          group_by: "day",
+        });
+        setViewsData(res.data.data ?? []);
+      } catch {
+        setViewsData([]);
+      } finally {
+        setViewsLoading(false);
+      }
+    }
+
     fetchDashboardData();
+    fetchViews();
   }, []);
 
   return (
@@ -106,23 +139,61 @@ export default function DashboardPage() {
           to="/admin/pathways"
         />
         <StatCard
-          title="Audiences"
+          title="Active Audiences"
           value={counts.audiences}
           loading={loading}
           to="/admin/audiences"
         />
         <StatCard
-          title="Plans"
+          title="Active Plans"
           value={counts.plans}
           loading={loading}
           to="/admin/plans"
         />
         <StatCard
-          title="Topics"
+          title="Active Topics"
           value={counts.topics}
           loading={loading}
           to="/admin/topics"
         />
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header fw-semibold">
+          Pathway Views — Last 30 Days
+        </div>
+        <div className="card-body">
+          {viewsLoading ? (
+            <div
+              className="placeholder-glow"
+              aria-busy="true"
+              aria-label="Loading pathway views"
+            >
+              <span className="placeholder col-12" style={{ height: 200 }} />
+            </div>
+          ) : viewsData.length === 0 ? (
+            <p className="text-muted mb-0">
+              No view data for the last 30 days.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={viewsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Views"
+                  stroke="#0d6efd"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       <div className="card">
