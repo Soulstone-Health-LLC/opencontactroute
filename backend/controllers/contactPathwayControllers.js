@@ -208,6 +208,10 @@ export const publishPathway = asyncHandler(async (req, res) => {
   pathway._changedBy = req.user._id;
   await pathway.save();
 
+  await pathway.populate("audience_id", "name");
+  await pathway.populate("plan_id", "name");
+  await pathway.populate("topic_id", "name");
+
   res.status(200).json(pathway);
 });
 
@@ -229,6 +233,10 @@ export const unpublishPathway = asyncHandler(async (req, res) => {
 
   pathway._changedBy = req.user._id;
   await pathway.save();
+
+  await pathway.populate("audience_id", "name");
+  await pathway.populate("plan_id", "name");
+  await pathway.populate("topic_id", "name");
 
   res.status(200).json(pathway);
 });
