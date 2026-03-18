@@ -542,7 +542,11 @@ describe("GET /api/v1/reports/pathway-coverage", () => {
     expect(res.body).toHaveProperty("published");
     expect(res.body).toHaveProperty("draft");
     expect(res.body).toHaveProperty("uncovered");
+    expect(res.body).toHaveProperty("published_combinations");
+    expect(res.body).toHaveProperty("draft_combinations");
     expect(res.body).toHaveProperty("uncovered_combinations");
+    expect(Array.isArray(res.body.published_combinations)).toBe(true);
+    expect(Array.isArray(res.body.draft_combinations)).toBe(true);
     expect(Array.isArray(res.body.uncovered_combinations)).toBe(true);
   });
 
@@ -587,6 +591,36 @@ describe("GET /api/v1/reports/pathway-coverage", () => {
     expect(combo.audience).toHaveProperty("name");
     expect(combo.plan).toHaveProperty("name");
     expect(combo.topic).toHaveProperty("name");
+  });
+
+  it("published_combinations contains audience, plan, topic, pathway_id", async () => {
+    const res = await request(app)
+      .get(`${REPORTS_BASE}/pathway-coverage`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.published_combinations).toHaveLength(2);
+    const combo = res.body.published_combinations[0];
+    expect(combo.audience).toHaveProperty("name");
+    expect(combo.plan).toHaveProperty("name");
+    expect(combo.topic).toHaveProperty("name");
+    expect(combo).toHaveProperty("pathway_id");
+    expect(combo).toHaveProperty("department");
+  });
+
+  it("draft_combinations contains audience, plan, topic, pathway_id", async () => {
+    const res = await request(app)
+      .get(`${REPORTS_BASE}/pathway-coverage`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.draft_combinations).toHaveLength(1);
+    const combo = res.body.draft_combinations[0];
+    expect(combo.audience).toHaveProperty("name");
+    expect(combo.plan).toHaveProperty("name");
+    expect(combo.topic).toHaveProperty("name");
+    expect(combo).toHaveProperty("pathway_id");
+    expect(combo).toHaveProperty("department");
   });
 
   it("returns zero for everything when no content exists", async () => {

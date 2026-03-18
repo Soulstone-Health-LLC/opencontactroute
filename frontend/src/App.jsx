@@ -16,6 +16,10 @@ import TopicFormPage from "./pages/admin/topics/TopicFormPage";
 import PathwaysListPage from "./pages/admin/pathways/PathwaysListPage";
 import PathwayFormPage from "./pages/admin/pathways/PathwayFormPage";
 import ReportsPage from "./pages/admin/reports/ReportsPage";
+import UtilizationReportPage from "./pages/admin/reports/UtilizationReportPage";
+import CoverageReportPage from "./pages/admin/reports/CoverageReportPage";
+import ContentAuditReportPage from "./pages/admin/reports/ContentAuditReportPage";
+import AuditLogReportPage from "./pages/admin/reports/AuditLogReportPage";
 import ProfilePage from "./pages/admin/profile/ProfilePage";
 import SettingsPage from "./pages/admin/settings/SettingsPage";
 import WidgetPage from "./pages/widget/WidgetPage";
@@ -55,6 +59,16 @@ function App() {
           <Route path="pathways/new" element={<PathwayFormPage />} />
           <Route path="pathways/:id/edit" element={<PathwayFormPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route
+            path="reports/utilization"
+            element={<UtilizationReportPage />}
+          />
+          <Route path="reports/coverage" element={<CoverageReportPage />} />
+          <Route
+            path="reports/content-audit"
+            element={<ContentAuditReportPage />}
+          />
+          <Route path="reports/audit-log" element={<AuditLogReportPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route
             path="users"

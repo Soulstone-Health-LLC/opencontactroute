@@ -1,4 +1,5 @@
 import request from "supertest";
+import mongoose from "mongoose";
 import app from "../app.js";
 import AuditLog from "../models/auditLogModel.js";
 
@@ -198,6 +199,35 @@ describe("Audit Log — User registration", () => {
     const log = await AuditLog.findOne({ resource: "User", action: "create" });
     expect(log.changed_by).toBeNull();
   });
+
+  it("should record password_hash as [redacted] in audit log changes", async () => {
+    const { token } = await createAndAuthUser(
+      "auditpwhash@example.com",
+      "Password123!",
+      "admin",
+    );
+
+    // Change a user's password — the password_hash field should appear in the
+    // audit log but with [redacted] values rather than actual bcrypt hashes.
+    const targetRes = await request(app)
+      .post(`${USER_BASE}/register`)
+      .send({ email: "auditpwtarget@example.com", password: "Password123!" });
+
+    await request(app)
+      .put(`${USER_BASE}/${targetRes.body._id}/password`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ new_password: "NewPassword456!" });
+
+    const logs = await AuditLog.find({ resource: "User", action: "update" });
+    expect(logs.length).toBeGreaterThanOrEqual(1);
+    const pwLog = logs.find((l) =>
+      l.changes.some((c) => c.field === "password_hash"),
+    );
+    expect(pwLog).toBeDefined();
+    const pwChange = pwLog.changes.find((c) => c.field === "password_hash");
+    expect(pwChange.old_value).toBe("[redacted]");
+    expect(pwChange.new_value).toBe("[redacted]");
+  });
 });
 
 // ─── GET /api/v1/reports/audit-log ────────────────────────────────────────────
@@ -329,5 +359,82 @@ describe("GET /api/v1/reports/audit-log", () => {
     );
     expect(entry).toBeDefined();
     expect(entry.changed_by).toHaveProperty("email");
+  });
+
+  it("should redact password_hash values for legacy entries stored with real hashes", async () => {
+    const { token } = await createAndAuthUser(
+      "scrubadmin@example.com",
+      "Password123!",
+      "admin",
+    );
+
+    // Inject a log entry that contains a password_hash change directly into
+    // the database, simulating records written before the REDACT_FIELDS fix.
+    await AuditLog.create({
+      resource: "User",
+      resource_id: new mongoose.Types.ObjectId(),
+      action: "update",
+      changed_by: null,
+      changed_at: new Date(),
+      changes: [
+        {
+          field: "email",
+          old_value: "old@example.com",
+          new_value: "new@example.com",
+        },
+        {
+          field: "password_hash",
+          old_value: "$2b$12$oldHash",
+          new_value: "$2b$12$newHash",
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .get(`${REPORTS_BASE}/audit-log?resource=User&action=update`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    for (const entry of res.body.data) {
+      const pwChange = entry.changes.find((c) => c.field === "password_hash");
+      if (pwChange) {
+        expect(pwChange.old_value).toBe("[redacted]");
+        expect(pwChange.new_value).toBe("[redacted]");
+      }
+    }
+  });
+
+  it("includes entries created earlier today when filtering by today's date", async () => {
+    const { token } = await createAndAuthUser(
+      "dateadmin@example.com",
+      "Password123!",
+      "admin",
+    );
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Inject a log entry timestamped now (mid-day)
+    await AuditLog.create({
+      resource: "Topic",
+      resource_id: new mongoose.Types.ObjectId(),
+      action: "delete",
+      changed_by: null,
+      changed_at: new Date(),
+      changes: [],
+    });
+
+    const res = await request(app)
+      .get(
+        `${REPORTS_BASE}/audit-log?resource=Topic&start_date=${today}&end_date=${today}`,
+      )
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    expect(
+      res.body.data.some(
+        (e) => e.resource === "Topic" && e.action === "delete",
+      ),
+    ).toBe(true);
   });
 });

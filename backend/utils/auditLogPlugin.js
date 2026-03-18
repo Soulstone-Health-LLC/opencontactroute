@@ -4,6 +4,9 @@ import logger from "./logger.js";
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const SKIP_FIELDS = new Set(["__v", "createdAt", "updatedAt"]);
+// Fields that are tracked (so the change is visible) but whose values must
+// never be stored in plain text.
+const REDACT_FIELDS = new Set(["password_hash"]);
 
 function diffObjects(oldObj, newObj) {
   const changes = [];
@@ -14,11 +17,19 @@ function diffObjects(oldObj, newObj) {
   for (const key of allKeys) {
     if (SKIP_FIELDS.has(key) || key.startsWith("_")) continue;
     if (JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key])) {
-      changes.push({
-        field: key,
-        old_value: oldObj[key] ?? null,
-        new_value: newObj[key] ?? null,
-      });
+      if (REDACT_FIELDS.has(key)) {
+        changes.push({
+          field: key,
+          old_value: "[redacted]",
+          new_value: "[redacted]",
+        });
+      } else {
+        changes.push({
+          field: key,
+          old_value: oldObj[key] ?? null,
+          new_value: newObj[key] ?? null,
+        });
+      }
     }
   }
 

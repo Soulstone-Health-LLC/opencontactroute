@@ -10,14 +10,24 @@ import Topic from "../models/topicModel.js";
 
 // Build a date range filter for PathwayEvent.occurred_at.
 // Defaults to the last 30 days when no dates are supplied.
+// Accepts full ISO-8601 strings (sent by the frontend with local-TZ bounds)
+// or plain YYYY-MM-DD strings (direct API consumers) — plain end dates are
+// treated as end-of-UTC-day so the full day is included.
+const parseStartDate = (s) => new Date(s);
+const parseEndDate = (s) => {
+  const d = new Date(s);
+  if (!s.includes("T")) d.setUTCHours(23, 59, 59, 999);
+  return d;
+};
+
 const buildDateFilter = (start_date, end_date) => {
   const now = new Date();
   const defaultStart = new Date(now);
   defaultStart.setDate(defaultStart.getDate() - 30);
 
   return {
-    $gte: start_date ? new Date(start_date) : defaultStart,
-    $lte: end_date ? new Date(end_date) : now,
+    $gte: start_date ? parseStartDate(start_date) : defaultStart,
+    $lte: end_date ? parseEndDate(end_date) : now,
   };
 };
 
@@ -44,8 +54,8 @@ export const getAuditLog = asyncHandler(async (req, res) => {
   if (action) filter.action = action;
   if (start_date || end_date) {
     filter.changed_at = {};
-    if (start_date) filter.changed_at.$gte = new Date(start_date);
-    if (end_date) filter.changed_at.$lte = new Date(end_date);
+    if (start_date) filter.changed_at.$gte = parseStartDate(start_date);
+    if (end_date) filter.changed_at.$lte = parseEndDate(end_date);
   }
 
   const pageNum = Math.max(1, parseInt(page));
@@ -61,12 +71,22 @@ export const getAuditLog = asyncHandler(async (req, res) => {
     AuditLog.countDocuments(filter),
   ]);
 
+  const SENSITIVE_FIELDS = new Set(["password_hash"]);
+
   res.status(200).json({
     total,
     page: pageNum,
     limit: limitNum,
     pages: Math.ceil(total / limitNum),
-    data: logs,
+    data: logs.map((log) => {
+      const obj = log.toObject();
+      obj.changes = obj.changes.map((c) =>
+        SENSITIVE_FIELDS.has(c.field)
+          ? { ...c, old_value: "[redacted]", new_value: "[redacted]" }
+          : c,
+      );
+      return obj;
+    }),
   });
 });
 
@@ -328,7 +348,7 @@ export const getPathwayCoverage = asyncHandler(async (req, res) => {
     Plan.find({ is_active: true }).select("_id name slug").lean(),
     Topic.find({ is_active: true }).select("_id name slug").lean(),
     ContactPathway.find({})
-      .select("audience_id plan_id topic_id status")
+      .select("audience_id plan_id topic_id status department")
       .lean(),
   ]);
 
@@ -344,6 +364,8 @@ export const getPathwayCoverage = asyncHandler(async (req, res) => {
   let published = 0;
   let draft = 0;
   let uncovered = 0;
+  const published_combinations = [];
+  const draft_combinations = [];
   const uncovered_combinations = [];
 
   for (const audience of audiences) {
@@ -351,21 +373,32 @@ export const getPathwayCoverage = asyncHandler(async (req, res) => {
       for (const topic of topics) {
         const key = `${audience._id}_${plan._id}_${topic._id}`;
         const pathway = pathwayMap.get(key);
+        const combo = {
+          audience: {
+            _id: audience._id,
+            name: audience.name,
+            slug: audience.slug,
+          },
+          plan: { _id: plan._id, name: plan.name, slug: plan.slug },
+          topic: { _id: topic._id, name: topic.name, slug: topic.slug },
+        };
         if (!pathway) {
           uncovered++;
-          uncovered_combinations.push({
-            audience: {
-              _id: audience._id,
-              name: audience.name,
-              slug: audience.slug,
-            },
-            plan: { _id: plan._id, name: plan.name, slug: plan.slug },
-            topic: { _id: topic._id, name: topic.name, slug: topic.slug },
-          });
+          uncovered_combinations.push(combo);
         } else if (pathway.status === "published") {
           published++;
+          published_combinations.push({
+            ...combo,
+            pathway_id: pathway._id,
+            department: pathway.department ?? null,
+          });
         } else {
           draft++;
+          draft_combinations.push({
+            ...combo,
+            pathway_id: pathway._id,
+            department: pathway.department ?? null,
+          });
         }
       }
     }
@@ -376,6 +409,8 @@ export const getPathwayCoverage = asyncHandler(async (req, res) => {
     published,
     draft,
     uncovered,
+    published_combinations,
+    draft_combinations,
     uncovered_combinations,
   });
 });
