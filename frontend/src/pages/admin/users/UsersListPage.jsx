@@ -200,7 +200,13 @@ export default function UsersListPage() {
         </div>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={users.length}
+        perPage={PER_PAGE}
+      />
 
       <ConfirmDialog
         show={!!confirmItem}

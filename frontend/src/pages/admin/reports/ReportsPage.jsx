@@ -71,6 +71,7 @@ export default function ReportsPage() {
   const [contentRows, setContentRows] = useState([]);
   const [contentPage, setContentPage] = useState(1);
   const [contentTotalPages, setContentTotalPages] = useState(1);
+  const [contentTotalItems, setContentTotalItems] = useState(null);
   const [contentStatus, setContentStatus] = useState("");
   const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState(null);
@@ -79,6 +80,7 @@ export default function ReportsPage() {
   const [auditRows, setAuditRows] = useState([]);
   const [auditPage, setAuditPage] = useState(1);
   const [auditTotalPages, setAuditTotalPages] = useState(1);
+  const [auditTotalItems, setAuditTotalItems] = useState(null);
   const [auditResource, setAuditResource] = useState("");
   const [auditAction, setAuditAction] = useState("");
   const [auditLoading, setAuditLoading] = useState(true);
@@ -135,6 +137,7 @@ export default function ReportsPage() {
       const res = await getContentAudit(params);
       setContentRows(res.data.data ?? []);
       setContentTotalPages(res.data.pages ?? 1);
+      setContentTotalItems(res.data.total ?? null);
     } catch {
       setContentError("Failed to load content audit.");
     } finally {
@@ -153,6 +156,7 @@ export default function ReportsPage() {
       const res = await getAuditLog(params);
       setAuditRows(res.data.data ?? []);
       setAuditTotalPages(res.data.pages ?? 1);
+      setAuditTotalItems(res.data.total ?? null);
     } catch {
       setAuditError("Failed to load audit log.");
     } finally {
@@ -510,6 +514,8 @@ export default function ReportsPage() {
             page={contentPage}
             totalPages={contentTotalPages}
             onPageChange={setContentPage}
+            totalItems={contentTotalItems}
+            perPage={25}
           />
         </div>
       </div>
@@ -625,6 +631,8 @@ export default function ReportsPage() {
               page={auditPage}
               totalPages={auditTotalPages}
               onPageChange={setAuditPage}
+              totalItems={auditTotalItems}
+              perPage={25}
             />
           </div>
         </div>

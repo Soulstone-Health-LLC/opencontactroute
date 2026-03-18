@@ -352,6 +352,8 @@ export default function AudiencesListPage() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              totalItems={filtered.length}
+              perPage={PER_PAGE}
             />
           </div>
         </>

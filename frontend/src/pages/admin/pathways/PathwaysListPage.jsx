@@ -266,15 +266,15 @@ export default function PathwaysListPage() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="mt-3">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
-            </div>
-          )}
+          <div className="mt-3">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalItems={sorted.length}
+              perPage={PER_PAGE}
+            />
+          </div>
         </>
       )}
 

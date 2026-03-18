@@ -345,6 +345,8 @@ export default function PlansListPage() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              totalItems={filtered.length}
+              perPage={PER_PAGE}
             />
           </div>
         </>

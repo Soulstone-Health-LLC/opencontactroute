@@ -347,6 +347,8 @@ export default function TopicsListPage() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              totalItems={filtered.length}
+              perPage={PER_PAGE}
             />
           </div>
         </>
