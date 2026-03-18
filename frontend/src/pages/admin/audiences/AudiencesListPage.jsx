@@ -152,6 +152,7 @@ export default function AudiencesListPage() {
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [search, setSearch] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
 
@@ -171,13 +172,14 @@ export default function AudiencesListPage() {
 
   const isSearching = search.trim().length > 0;
 
-  const filtered = isSearching
-    ? audiences.filter(
-        (a) =>
-          a.name.toLowerCase().includes(search.toLowerCase()) ||
-          a.slug?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : audiences;
+  const filtered = audiences.filter((a) => {
+    if (!showInactive && !a.is_active) return false;
+    if (!isSearching) return true;
+    const q = search.toLowerCase();
+    return (
+      a.name.toLowerCase().includes(q) || a.slug?.toLowerCase().includes(q)
+    );
+  });
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -259,7 +261,7 @@ export default function AudiencesListPage() {
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="d-flex gap-2 align-items-center mb-3">
         <input
           type="search"
           className="form-control"
@@ -271,6 +273,24 @@ export default function AudiencesListPage() {
           }}
           aria-label="Search audiences"
         />
+        <div className="form-check form-check-inline ms-1 mb-0 text-nowrap">
+          <input
+            id="show-inactive-audiences"
+            type="checkbox"
+            className="form-check-input"
+            checked={showInactive}
+            onChange={(e) => {
+              setShowInactive(e.target.checked);
+              setPage(1);
+            }}
+          />
+          <label
+            htmlFor="show-inactive-audiences"
+            className="form-check-label small"
+          >
+            Show inactive
+          </label>
+        </div>
       </div>
 
       {filtered.length === 0 ? (

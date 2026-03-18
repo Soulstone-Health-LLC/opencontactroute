@@ -57,6 +57,27 @@ function setupMocks() {
   vi.spyOn(reportService, "getPathwayViews").mockResolvedValue({
     data: { data: [], group_by: "day" },
   });
+  vi.spyOn(reportService, "getTopPathways").mockResolvedValue({
+    data: { data: [] },
+  });
+  vi.spyOn(reportService, "getTopTopics").mockResolvedValue({
+    data: { data: [] },
+  });
+  vi.spyOn(reportService, "getTopAudiences").mockResolvedValue({
+    data: { data: [] },
+  });
+  vi.spyOn(reportService, "getTopPlans").mockResolvedValue({
+    data: { data: [] },
+  });
+  vi.spyOn(reportService, "getPathwayCoverage").mockResolvedValue({
+    data: {
+      total_possible: 64,
+      published: 24,
+      draft: 4,
+      uncovered: 36,
+      uncovered_combinations: [],
+    },
+  });
 }
 
 function renderDashboard() {
@@ -93,9 +114,9 @@ describe("DashboardPage", () => {
       setupMocks();
       renderDashboard();
       expect(screen.getByText(/published pathways/i)).toBeInTheDocument();
-      expect(screen.getByText(/audiences/i)).toBeInTheDocument();
-      expect(screen.getByText(/plans/i)).toBeInTheDocument();
-      expect(screen.getByText(/topics/i)).toBeInTheDocument();
+      expect(screen.getByText("Active Audiences")).toBeInTheDocument();
+      expect(screen.getByText("Active Plans")).toBeInTheDocument();
+      expect(screen.getByText("Active Topics")).toBeInTheDocument();
     });
 
     it("renders the Recently Updated Pathways section", async () => {

@@ -172,6 +172,7 @@ export default function WidgetPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [noPathway, setNoPathway] = useState(false);
 
   // Load audiences on mount
   useEffect(() => {
@@ -232,10 +233,15 @@ export default function WidgetPage() {
         topic_id: topic._id,
         embed_source: embedSource,
       }).catch(() => {});
-    } catch {
-      setError(
-        "No contact information found for that combination. Please try a different selection.",
-      );
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setStep(4);
+        setNoPathway(true);
+      } else {
+        setError(
+          "Something went wrong loading contact information. Please try again.",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -247,6 +253,7 @@ export default function WidgetPage() {
     setSelectedPlan(null);
     setSelectedTopic(null);
     setPathway(null);
+    setNoPathway(false);
     setError(null);
     setPlans([]);
     setTopics([]);
@@ -263,6 +270,7 @@ export default function WidgetPage() {
     } else if (step === 4) {
       setStep(3);
       setPathway(null);
+      setNoPathway(false);
       setError(null);
     }
   }
@@ -356,7 +364,28 @@ export default function WidgetPage() {
         </section>
       )}
 
-      {step === 4 && !pathway && error && (
+      {step === 4 && noPathway && (
+        <section aria-labelledby="no-pathway-heading">
+          <div className="alert alert-warning" role="alert">
+            <h4 id="no-pathway-heading" className="alert-heading h6">
+              No contact information found
+            </h4>
+            <p className="mb-0">
+              We don&rsquo;t have contact details for that specific combination.
+              Please contact the health plan directly for assistance.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={handleReset}
+          >
+            Start over
+          </button>
+        </section>
+      )}
+
+      {step === 4 && !pathway && !noPathway && error && (
         <div>
           <div className="alert alert-warning" role="alert">
             {error}

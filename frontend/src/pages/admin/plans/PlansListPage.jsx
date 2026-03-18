@@ -148,6 +148,7 @@ export default function PlansListPage() {
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [search, setSearch] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
 
@@ -167,13 +168,14 @@ export default function PlansListPage() {
 
   const isSearching = search.trim().length > 0;
 
-  const filtered = isSearching
-    ? plans.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.slug?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : plans;
+  const filtered = plans.filter((p) => {
+    if (!showInactive && !p.is_active) return false;
+    if (!isSearching) return true;
+    const q = search.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q)
+    );
+  });
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -252,7 +254,7 @@ export default function PlansListPage() {
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="d-flex gap-2 align-items-center mb-3">
         <input
           type="search"
           className="form-control"
@@ -264,6 +266,24 @@ export default function PlansListPage() {
           }}
           aria-label="Search plans"
         />
+        <div className="form-check form-check-inline ms-1 mb-0 text-nowrap">
+          <input
+            id="show-inactive-plans"
+            type="checkbox"
+            className="form-check-input"
+            checked={showInactive}
+            onChange={(e) => {
+              setShowInactive(e.target.checked);
+              setPage(1);
+            }}
+          />
+          <label
+            htmlFor="show-inactive-plans"
+            className="form-check-label small"
+          >
+            Show inactive
+          </label>
+        </div>
       </div>
 
       {filtered.length === 0 ? (

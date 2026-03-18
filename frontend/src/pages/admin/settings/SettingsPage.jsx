@@ -202,9 +202,18 @@ export default function SettingsPage() {
               </button>
             </div>
             <div className="form-text">
-              Paste this into any HTML page or CMS. Pass{" "}
-              <code>?source=your-site</code> on the URL to track where views
-              come from in reports.
+              Paste this into any HTML page or CMS. You can pre-select steps
+              using query parameters: <code>?audience=&lt;slug&gt;</code>{" "}
+              pre-selects the audience,{" "}
+              <code>?audience=&lt;slug&gt;&amp;plan=&lt;slug&gt;</code>{" "}
+              pre-selects audience and plan, and{" "}
+              <code>
+                ?audience=&lt;slug&gt;&amp;plan=&lt;slug&gt;&amp;topic=&lt;slug&gt;
+              </code>{" "}
+              jumps directly to the result. Add{" "}
+              <code>&amp;source=your-site</code> to track where views originate
+              in reports. Slugs are shown on the Audiences, Plans, and Topics
+              list pages.
             </div>
           </div>
 

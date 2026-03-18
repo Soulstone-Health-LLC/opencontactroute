@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,7 +16,27 @@ import { getAudiences } from "../../services/audienceService";
 import { getPlans } from "../../services/planService";
 import { getTopics } from "../../services/topicService";
 import { getPathways } from "../../services/pathwayService";
-import { getContentAudit, getPathwayViews } from "../../services/reportService";
+import {
+  getContentAudit,
+  getPathwayViews,
+  getTopPathways,
+  getTopTopics,
+  getTopAudiences,
+  getTopPlans,
+  getPathwayCoverage,
+} from "../../services/reportService";
+
+function LoadingRow({ cols }) {
+  return (
+    <tr aria-busy="true">
+      {Array.from({ length: cols }).map((_, i) => (
+        <td key={i}>
+          <span className="placeholder col-8" />
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 function StatCard({ title, value, loading, to }) {
   return (
@@ -56,6 +78,14 @@ export default function DashboardPage() {
   const [recentPathways, setRecentPathways] = useState([]);
   const [viewsData, setViewsData] = useState([]);
   const [viewsLoading, setViewsLoading] = useState(true);
+  const [topPathways, setTopPathways] = useState([]);
+  const [topTopics, setTopTopics] = useState([]);
+  const [topAudiences, setTopAudiences] = useState([]);
+  const [topPlans, setTopPlans] = useState([]);
+  const [topLoading, setTopLoading] = useState(true);
+  const [coverage, setCoverage] = useState(null);
+  const [coverageLoading, setCoverageLoading] = useState(true);
+  const [coverageError, setCoverageError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -112,8 +142,49 @@ export default function DashboardPage() {
       }
     }
 
+    async function fetchTopData() {
+      setTopLoading(true);
+      try {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 29);
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        const params = { start_date: fmt(start), end_date: fmt(end) };
+        const [pathwaysRes, topicsRes, audiencesRes, plansRes] =
+          await Promise.all([
+            getTopPathways({ ...params, limit: 10 }),
+            getTopTopics(params),
+            getTopAudiences(params),
+            getTopPlans(params),
+          ]);
+        setTopPathways(pathwaysRes.data.data ?? []);
+        setTopTopics(topicsRes.data.data ?? []);
+        setTopAudiences(audiencesRes.data.data ?? []);
+        setTopPlans(plansRes.data.data ?? []);
+      } catch {
+        // Non-critical — silently leave lists empty
+      } finally {
+        setTopLoading(false);
+      }
+    }
+
+    async function fetchCoverage() {
+      setCoverageLoading(true);
+      setCoverageError(null);
+      try {
+        const res = await getPathwayCoverage();
+        setCoverage(res.data);
+      } catch {
+        setCoverageError("Failed to load pathway coverage.");
+      } finally {
+        setCoverageLoading(false);
+      }
+    }
+
     fetchDashboardData();
     fetchViews();
+    fetchTopData();
+    fetchCoverage();
   }, []);
 
   return (
@@ -193,6 +264,168 @@ export default function DashboardPage() {
               </LineChart>
             </ResponsiveContainer>
           )}
+        </div>
+      </div>
+
+      {/* ── Top Pathways ─────────────────────────────────────── */}
+      <div className="card mb-4">
+        <div className="card-header fw-semibold">
+          Top Pathways — Last 30 Days
+        </div>
+        <div className="card-body p-0">
+          <table className="table table-sm table-hover mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>#</th>
+                <th>Audience › Plan › Topic</th>
+                <th>Department</th>
+                <th className="text-end">Views</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <LoadingRow key={i} cols={4} />
+                ))
+              ) : topPathways.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-muted text-center py-3">
+                    No data available.
+                  </td>
+                </tr>
+              ) : (
+                topPathways.map((row, idx) => (
+                  <tr key={row.pathway_id ?? idx}>
+                    <td>{idx + 1}</td>
+                    <td>
+                      {row.audience?.name} › {row.plan?.name} ›{" "}
+                      {row.topic?.name}
+                    </td>
+                    <td>{row.department ?? "—"}</td>
+                    <td className="text-end">{row.count}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Top Topics / Audiences / Plans ───────────────────── */}
+      <div className="row g-4 mb-4">
+        {[
+          { title: "Top Topics — Last 30 Days", data: topTopics, key: "topic" },
+          {
+            title: "Top Audiences — Last 30 Days",
+            data: topAudiences,
+            key: "audience",
+          },
+          { title: "Top Plans — Last 30 Days", data: topPlans, key: "plan" },
+        ].map(({ title, data, key }) => (
+          <div className="col-md-4" key={title}>
+            <div className="card h-100">
+              <div className="card-header fw-semibold">{title}</div>
+              <div className="card-body">
+                {topLoading ? (
+                  <div
+                    className="placeholder-glow"
+                    aria-busy="true"
+                    aria-label={`Loading ${title}`}
+                  >
+                    <span
+                      className="placeholder col-12"
+                      style={{ height: 200 }}
+                    />
+                  </div>
+                ) : data.length === 0 ? (
+                  <p className="text-muted mb-0">No data available.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart
+                      data={data.map((d) => ({
+                        name: d[key]?.name,
+                        count: d.count,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" name="Views" fill="#0d6efd" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Pathway Coverage ─────────────────────────────────── */}
+      <div className="card mb-4">
+        <div className="card-header fw-semibold">Pathway Coverage</div>
+        <div className="card-body">
+          {coverageError && (
+            <div className="alert alert-danger" role="alert">
+              {coverageError}
+            </div>
+          )}
+          {coverageLoading ? (
+            <div className="row g-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="col-sm-6 col-xl-3">
+                  <div className="card">
+                    <div
+                      className="card-body placeholder-glow"
+                      aria-busy="true"
+                    >
+                      <span className="placeholder col-8 fs-3" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : coverage ? (
+            <>
+              <div className="row g-3 mb-3">
+                {[
+                  { label: "Total Possible", value: coverage.total_possible },
+                  { label: "Published", value: coverage.published },
+                  { label: "Draft", value: coverage.draft },
+                  { label: "Uncovered", value: coverage.uncovered },
+                ].map(({ label, value }) => (
+                  <div key={label} className="col-sm-6 col-xl-3">
+                    <div className="card">
+                      <div className="card-body">
+                        <p className="text-muted small mb-1">{label}</p>
+                        <p className="fs-3 fw-bold mb-0">{value}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {coverage.uncovered_combinations?.length > 0 && (
+                <details>
+                  <summary
+                    className="small text-muted"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Show {coverage.uncovered_combinations.length} uncovered
+                    combinations
+                  </summary>
+                  <ul className="mt-2 small list-unstyled ps-2">
+                    {coverage.uncovered_combinations.map((combo, i) => (
+                      <li key={i}>
+                        {combo.audience?.name ?? combo.audience_id} &rsaquo;{" "}
+                        {combo.plan?.name ?? combo.plan_id} &rsaquo;{" "}
+                        {combo.topic?.name ?? combo.topic_id}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
+          ) : null}
         </div>
       </div>
 

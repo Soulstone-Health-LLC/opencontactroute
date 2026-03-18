@@ -102,7 +102,8 @@ describe("AudiencesListPage", () => {
       await waitFor(() =>
         expect(screen.getByText("Members")).toBeInTheDocument(),
       );
-      expect(screen.getByText("Providers")).toBeInTheDocument();
+      // Providers is inactive and hidden by default
+      expect(screen.queryByText("Providers")).toBeNull();
     });
 
     it("shows Active badge for active audiences", async () => {
@@ -113,16 +114,21 @@ describe("AudiencesListPage", () => {
     });
 
     it("shows Inactive badge for inactive audiences", async () => {
+      const user = userEvent.setup();
       renderList();
       await waitFor(() =>
-        expect(screen.getByText("Inactive")).toBeInTheDocument(),
+        expect(screen.getByText("Members")).toBeInTheDocument(),
       );
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
+      );
+      expect(screen.getByText("Inactive")).toBeInTheDocument();
     });
 
     it("shows Edit links for each row", async () => {
       renderList();
       await waitFor(() =>
-        expect(screen.getAllByRole("link", { name: /edit/i })).toHaveLength(2),
+        expect(screen.getAllByRole("link", { name: /edit/i })).toHaveLength(1),
       );
     });
 
@@ -136,19 +142,24 @@ describe("AudiencesListPage", () => {
     });
 
     it("shows Activate button for inactive audience (admin)", async () => {
+      const user = userEvent.setup();
       renderList("admin");
       await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "Activate" }),
-        ).toBeInTheDocument(),
+        expect(screen.getByText("Members")).toBeInTheDocument(),
       );
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
+      );
+      expect(
+        screen.getByRole("button", { name: "Activate" }),
+      ).toBeInTheDocument();
     });
 
     it("shows Delete buttons for admin", async () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
     });
@@ -181,6 +192,9 @@ describe("AudiencesListPage", () => {
         expect(screen.getByText("Members")).toBeInTheDocument(),
       );
 
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
+      );
       await user.type(screen.getByRole("searchbox"), "prov");
 
       expect(screen.queryByText("Members")).toBeNull();
@@ -206,7 +220,7 @@ describe("AudiencesListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -222,7 +236,7 @@ describe("AudiencesListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -241,7 +255,7 @@ describe("AudiencesListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -278,16 +292,19 @@ describe("AudiencesListPage", () => {
       const user = userEvent.setup();
       renderList("admin");
       await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "Activate" }),
-        ).toBeInTheDocument(),
+        expect(screen.getByText("Members")).toBeInTheDocument(),
+      );
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
       );
 
       await user.click(screen.getByRole("button", { name: "Activate" }));
 
-      expect(audienceService.updateAudience).toHaveBeenCalledWith("a2", {
-        is_active: true,
-      });
+      await waitFor(() =>
+        expect(audienceService.updateAudience).toHaveBeenCalledWith("a2", {
+          is_active: true,
+        }),
+      );
     });
 
     it("shows error alert when delete fails", async () => {
@@ -298,7 +315,7 @@ describe("AudiencesListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 

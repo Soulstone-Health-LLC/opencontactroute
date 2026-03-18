@@ -96,7 +96,8 @@ describe("PlansListPage", () => {
     it("renders plan names in the table", async () => {
       renderList();
       await waitFor(() => expect(screen.getByText("HMO")).toBeInTheDocument());
-      expect(screen.getByText("PPO")).toBeInTheDocument();
+      // PPO is inactive and hidden by default
+      expect(screen.queryByText("PPO")).toBeNull();
     });
 
     it("shows Active badge for active plans", async () => {
@@ -107,16 +108,19 @@ describe("PlansListPage", () => {
     });
 
     it("shows Inactive badge for inactive plans", async () => {
+      const user = userEvent.setup();
       renderList();
-      await waitFor(() =>
-        expect(screen.getByText("Inactive")).toBeInTheDocument(),
+      await waitFor(() => expect(screen.getByText("HMO")).toBeInTheDocument());
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
       );
+      expect(screen.getByText("Inactive")).toBeInTheDocument();
     });
 
     it("shows Edit links for each row", async () => {
       renderList();
       await waitFor(() =>
-        expect(screen.getAllByRole("link", { name: /edit/i })).toHaveLength(2),
+        expect(screen.getAllByRole("link", { name: /edit/i })).toHaveLength(1),
       );
     });
 
@@ -130,19 +134,22 @@ describe("PlansListPage", () => {
     });
 
     it("shows Activate button for inactive plan (admin)", async () => {
+      const user = userEvent.setup();
       renderList("admin");
-      await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "Activate" }),
-        ).toBeInTheDocument(),
+      await waitFor(() => expect(screen.getByText("HMO")).toBeInTheDocument());
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
       );
+      expect(
+        screen.getByRole("button", { name: "Activate" }),
+      ).toBeInTheDocument();
     });
 
     it("shows Delete buttons for admin", async () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
     });
@@ -169,6 +176,9 @@ describe("PlansListPage", () => {
       renderList();
       await waitFor(() => expect(screen.getByText("HMO")).toBeInTheDocument());
 
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
+      );
       await user.type(screen.getByRole("searchbox"), "ppo");
 
       expect(screen.queryByText("HMO")).toBeNull();
@@ -192,7 +202,7 @@ describe("PlansListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -208,7 +218,7 @@ describe("PlansListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -227,7 +237,7 @@ describe("PlansListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 
@@ -265,10 +275,9 @@ describe("PlansListPage", () => {
       });
       const user = userEvent.setup();
       renderList("admin");
-      await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "Activate" }),
-        ).toBeInTheDocument(),
+      await waitFor(() => expect(screen.getByText("HMO")).toBeInTheDocument());
+      await user.click(
+        screen.getByRole("checkbox", { name: /show inactive/i }),
       );
 
       await user.click(screen.getByRole("button", { name: "Activate" }));
@@ -286,7 +295,7 @@ describe("PlansListPage", () => {
       renderList("admin");
       await waitFor(() =>
         expect(screen.getAllByRole("button", { name: /delete/i })).toHaveLength(
-          2,
+          1,
         ),
       );
 

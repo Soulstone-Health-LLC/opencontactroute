@@ -23,6 +23,7 @@ export default function PathwaysListPage() {
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
   const [sortKey, setSortKey] = useState(null);
@@ -54,6 +55,7 @@ export default function PathwaysListPage() {
   }
 
   const filtered = pathways.filter((pw) => {
+    if (statusFilter && pw.status !== statusFilter) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -146,7 +148,7 @@ export default function PathwaysListPage() {
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="d-flex gap-2 mb-3">
         <input
           type="search"
           className="form-control"
@@ -158,6 +160,19 @@ export default function PathwaysListPage() {
           }}
           aria-label="Search pathways"
         />
+        <select
+          className="form-select w-auto"
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
+          aria-label="Filter by status"
+        >
+          <option value="">All Statuses</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
       </div>
 
       {filtered.length === 0 ? (

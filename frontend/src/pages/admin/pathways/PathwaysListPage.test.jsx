@@ -130,16 +130,18 @@ describe("PathwaysListPage", () => {
 
     it("shows Published badge for published pathways", async () => {
       renderList();
-      await waitFor(() =>
-        expect(screen.getByText("Published")).toBeInTheDocument(),
-      );
+      await waitFor(() => {
+        const matches = screen.getAllByText("Published");
+        expect(matches.some((el) => el.classList.contains("badge"))).toBe(true);
+      });
     });
 
     it("shows Draft badge for draft pathways", async () => {
       renderList();
-      await waitFor(() =>
-        expect(screen.getByText("Draft")).toBeInTheDocument(),
-      );
+      await waitFor(() => {
+        const matches = screen.getAllByText("Draft");
+        expect(matches.some((el) => el.classList.contains("badge"))).toBe(true);
+      });
     });
 
     it("shows Edit links for each row", async () => {
