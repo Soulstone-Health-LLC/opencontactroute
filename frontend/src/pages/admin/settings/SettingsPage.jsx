@@ -138,7 +138,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Widget Embed ─────────────────────────────────────────────────── */}
-      <div className="card mb-4">
+      <div className="card mb-4" id="widget-embed">
         <div className="card-header fw-semibold">Widget Embed</div>
         <div className="card-body">
           <p className="text-muted small mb-4">

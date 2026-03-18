@@ -125,11 +125,19 @@ export default function PathwaysListPage() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">Contact Pathways</h2>
-        {canModify && (
-          <Link to="/admin/pathways/new" className="btn btn-primary btn-sm">
-            + New Pathway
+        <div className="d-flex gap-2">
+          <Link
+            to="/admin/settings#widget-embed"
+            className="btn btn-outline-secondary btn-sm"
+          >
+            Embed URL &amp; Code
           </Link>
-        )}
+          {canModify && (
+            <Link to="/admin/pathways/new" className="btn btn-primary btn-sm">
+              + New Pathway
+            </Link>
+          )}
+        </div>
       </div>
 
       {(error || actionError) && (
