@@ -94,6 +94,15 @@ describe("PathwaysListPage", () => {
         ).toBeInTheDocument(),
       );
     });
+
+    it("renders the Embed URL & Code button for all roles", async () => {
+      renderList("user");
+      await waitFor(() =>
+        expect(
+          screen.getByRole("link", { name: /embed url/i }),
+        ).toBeInTheDocument(),
+      );
+    });
   });
 
   describe("Data loading", () => {

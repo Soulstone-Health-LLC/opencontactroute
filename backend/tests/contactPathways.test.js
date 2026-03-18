@@ -448,6 +448,9 @@ describe("PUT /api/v1/pathways/:id/publish", () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("published");
     expect(res.body.published_at).not.toBeNull();
+    expect(res.body.audience_id).toMatchObject({ name: expect.any(String) });
+    expect(res.body.plan_id).toMatchObject({ name: expect.any(String) });
+    expect(res.body.topic_id).toMatchObject({ name: expect.any(String) });
   });
 
   it("should return 403 for user role", async () => {
@@ -519,6 +522,9 @@ describe("PUT /api/v1/pathways/:id/unpublish", () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("draft");
     expect(res.body.published_at).toBeNull();
+    expect(res.body.audience_id).toMatchObject({ name: expect.any(String) });
+    expect(res.body.plan_id).toMatchObject({ name: expect.any(String) });
+    expect(res.body.topic_id).toMatchObject({ name: expect.any(String) });
   });
 
   it("should return 403 for user role", async () => {

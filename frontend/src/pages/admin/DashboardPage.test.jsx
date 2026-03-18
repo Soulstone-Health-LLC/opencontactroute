@@ -9,15 +9,15 @@ import * as pathwayService from "../../services/pathwayService";
 import * as reportService from "../../services/reportService";
 
 const mockAudiences = [
-  { _id: "a1", name: "Members" },
-  { _id: "a2", name: "Providers" },
+  { _id: "a1", name: "Members", is_active: true },
+  { _id: "a2", name: "Providers", is_active: true },
 ];
 const mockPlans = [
-  { _id: "p1", name: "HMO" },
-  { _id: "p2", name: "PPO" },
-  { _id: "p3", name: "EPO" },
+  { _id: "p1", name: "HMO", is_active: true },
+  { _id: "p2", name: "PPO", is_active: true },
+  { _id: "p3", name: "EPO", is_active: true },
 ];
-const mockTopics = [{ _id: "t1", name: "Billing" }];
+const mockTopics = [{ _id: "t1", name: "Billing", is_active: true }];
 const mockPathways = [
   { _id: "pw1", name: "HMO Member Billing", status: "published" },
   { _id: "pw2", name: "PPO Provider Auth", status: "draft" },
@@ -53,6 +53,9 @@ function setupMocks() {
   });
   vi.spyOn(reportService, "getContentAudit").mockResolvedValue({
     data: { total: 2, page: 1, limit: 5, pages: 1, data: mockRecentPathways },
+  });
+  vi.spyOn(reportService, "getPathwayViews").mockResolvedValue({
+    data: { data: [], group_by: "day" },
   });
 }
 
