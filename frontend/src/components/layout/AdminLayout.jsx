@@ -2,6 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../hooks/useAuth";
 import { logout } from "../../services/authService";
+import logo from "../../assets/logo.svg";
 
 export default function AdminLayout() {
   const { user, setUser } = useAuth();
@@ -18,9 +19,12 @@ export default function AdminLayout() {
     <div className="d-flex vh-100 overflow-hidden">
       <nav
         className="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white"
-        style={{ width: 240 }}
+        style={{ width: 260 }}
       >
-        <span className="fs-5 fw-semibold mb-4">OpenContactRoute</span>
+        <div className="d-flex align-items-center gap-2 mb-4">
+          <img src={logo} alt="OpenContactRoute logo" width={32} height={32} />
+          <span className="fs-5 fw-semibold">OpenContactRoute</span>
+        </div>
         <ul className="nav nav-pills flex-column mb-auto gap-1">
           <li>
             <NavLink to="/admin" end className="nav-link text-white">

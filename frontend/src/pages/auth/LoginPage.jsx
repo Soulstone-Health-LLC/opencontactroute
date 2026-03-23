@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { login } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 import InfoTooltip from "../../components/ui/InfoTooltip";
+import logo from "../../assets/logo.svg";
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -40,6 +41,13 @@ export default function LoginPage() {
           aria-hidden="true"
         >
           <div className="text-white text-center p-5">
+            <img
+              src={logo}
+              alt="OpenContactRoute logo"
+              width={80}
+              height={80}
+              className="mb-4"
+            />
             <h1 className="display-5 fw-bold">OpenContactRoute</h1>
             <p className="lead mt-3">
               Guided contact routing for health plans.
