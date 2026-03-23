@@ -176,7 +176,7 @@ describe("SettingsPage", () => {
     it("renders the Primary Color picker", async () => {
       renderSettings();
       await waitFor(() =>
-        expect(screen.getByLabelText("Primary Color")).toBeInTheDocument(),
+        expect(screen.getByTitle(/choose primary color/i)).toBeInTheDocument(),
       );
     });
 

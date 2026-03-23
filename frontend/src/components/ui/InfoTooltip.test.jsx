@@ -20,12 +20,9 @@ describe("InfoTooltip", () => {
     expect(screen.getByText("ⓘ")).toHaveAttribute("tabindex", "0");
   });
 
-  it("carries aria-label equal to the tooltip text for screen readers", () => {
+  it("exposes tooltip text to screen readers via a visually-hidden span", () => {
     render(<InfoTooltip text="Some explanation." />);
-    expect(screen.getByText("ⓘ")).toHaveAttribute(
-      "aria-label",
-      "Some explanation.",
-    );
+    expect(screen.getByText("Some explanation.")).toBeInTheDocument();
   });
 
   it("sets the Bootstrap title attribute used as tooltip content", () => {

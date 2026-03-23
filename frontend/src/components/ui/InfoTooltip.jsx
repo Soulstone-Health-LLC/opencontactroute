@@ -35,9 +35,9 @@ export default function InfoTooltip({ text, placement = "right" }) {
       data-bs-toggle="tooltip"
       data-bs-placement={placement}
       title={text}
-      aria-label={text}
     >
       &#9432;
+      <span className="visually-hidden">{text}</span>
     </span>
   );
 }
