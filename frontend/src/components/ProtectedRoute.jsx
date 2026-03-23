@@ -1,6 +1,11 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
+// ─── PROTECTED ROUTE ─────────────────────────────────────────────────────────
+// Wraps routes that require authentication.
+// Redirects to /login if there is no authenticated user.
+// Optionally, pass requiredRole="admin" to restrict a route to a single role —
+// users with a different role are redirected to /admin instead of getting an error.
 export default function ProtectedRoute({ children, requiredRole }) {
   const { user, loading } = useAuth();
 

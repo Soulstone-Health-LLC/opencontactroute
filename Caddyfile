@@ -1,3 +1,15 @@
+# Caddyfile — Production reverse proxy with automatic HTTPS via Let's Encrypt.
+#
+# DOMAIN and CADDY_TLS_EMAIL are read from the .env file at runtime.
+# DOMAIN    — the public domain name (e.g. directory.acmehealth.com)
+# CADDY_TLS_EMAIL — email address for Let's Encrypt expiry notifications (optional)
+#
+# Caddy automatically obtains and renews TLS certificates. No manual certificate
+# management is required. HTTP traffic is redirected to HTTPS automatically.
+#
+# "backend" and "frontend" refer to Docker container names defined in
+# docker-compose.prod.yaml — Docker's internal DNS resolves them.
+
 {
 	email {env.CADDY_TLS_EMAIL}
 }

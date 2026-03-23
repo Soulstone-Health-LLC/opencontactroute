@@ -7,6 +7,11 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import { SiteConfigProvider } from "./context/SiteConfigContext";
 
+// Provider hierarchy:
+//   AuthProvider      — fetches the authenticated user on load; must wrap everything
+//                       so any component can access the current user via useAuth()
+//   SiteConfigProvider — fetches org_name and primary_color; must be inside AuthProvider
+//                        because settings are loaded from an authenticated API endpoint
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>

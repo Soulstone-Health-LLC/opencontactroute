@@ -8,6 +8,8 @@ const DEFAULTS = {
 
 export const SiteConfigContext = createContext(null);
 
+// applyToDOM is a placeholder for future runtime theme injection
+// (e.g. setting --bs-primary CSS variable from config.primary_color).
 function applyToDOM(_config) {}
 
 export function SiteConfigProvider({ children }) {

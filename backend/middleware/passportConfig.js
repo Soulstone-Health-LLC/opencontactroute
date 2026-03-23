@@ -1,6 +1,15 @@
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import User from "../models/userModel.js";
 
+// ─── PASSPORT JWT CONFIGURATION ───────────────────────────────────────────────
+// Configures the JWT strategy used by the `protect` middleware.
+//
+// Token extraction order:
+//   1. httpOnly cookie named "jwt" — used by the browser-based admin interface
+//   2. Authorization: Bearer header — used by direct API consumers
+//
+// password_hash is stripped from the populated user so it never appears on req.user.
+
 const cookieExtractor = (req) => req?.cookies?.jwt ?? null;
 
 const opts = {

@@ -18,6 +18,8 @@ router
   .post(protect, requireRole("admin", "super user"), createPathway)
   .get(protect, getPathways);
 
+// /:id/publish and /:id/unpublish must be declared before /:id to prevent
+// Express matching "publish" as the :id parameter.
 router
   .route("/:id/publish")
   .put(protect, requireRole("admin", "super user"), publishPathway);
