@@ -9,6 +9,7 @@ import {
 import { getAudiences } from "../../../services/audienceService";
 import { getPlans } from "../../../services/planService";
 import { getTopics } from "../../../services/topicService";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 
 export default function PathwayFormPage() {
   const { id } = useParams();
@@ -280,7 +281,8 @@ export default function PathwayFormPage() {
 
             <div className="mb-3">
               <label htmlFor="department" className="form-label">
-                Department
+                Department{" "}
+                <InfoTooltip text="The department or team this pathway routes to. Displayed in the widget to help consumers identify the right contact." />
               </label>
               <input
                 id="department"
@@ -311,7 +313,10 @@ export default function PathwayFormPage() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">IVR Steps</label>
+              <label className="form-label">
+                IVR Steps{" "}
+                <InfoTooltip text="Interactive Voice Response steps. Enter each phone menu prompt a caller should follow in order (e.g. 'Press 1 for Billing'). Displayed in the widget to guide members through the phone system." />
+              </label>
               {form.ivr_steps.map((step, i) => (
                 <div key={i} className="input-group mb-2">
                   <input
@@ -342,7 +347,8 @@ export default function PathwayFormPage() {
 
             <div className="mb-3">
               <label htmlFor="portal_url" className="form-label">
-                Portal URL
+                Portal URL{" "}
+                <InfoTooltip text="A link to an online self-service or member portal. Displayed in the widget as an alternative contact option." />
               </label>
               <input
                 id="portal_url"
@@ -421,15 +427,11 @@ export default function PathwayFormPage() {
                       vendor_name: e.target.checked ? prev.vendor_name : "",
                     }))
                   }
-                  aria-describedby="delegated-hint"
                 />
                 <label htmlFor="is_delegated" className="form-check-label">
-                  Delegated to Vendor
+                  Delegated to Vendor{" "}
+                  <InfoTooltip text="Check if this pathway's contact is managed by a third-party vendor." />
                 </label>
-                <div className="form-text" id="delegated-hint">
-                  Check if this pathway’s contact is managed by a third-party
-                  vendor.
-                </div>
               </div>
             </div>
 

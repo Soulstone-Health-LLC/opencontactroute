@@ -7,6 +7,7 @@ import {
   createPerson,
 } from "../../../services/personService";
 import { changePassword } from "../../../services/userService";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 
 const SUFFIXES = ["Jr.", "Sr.", "II", "III", "IV", "V", "MD", "PhD", "Esq."];
 
@@ -138,7 +139,8 @@ export default function ProfilePage() {
             <dd className="col-sm-9">{user?.email ?? "—"}</dd>
             <dt className="col-sm-3 text-muted">Role</dt>
             <dd className="col-sm-9 mb-0">
-              {ROLE_LABELS[user?.user_role] ?? user?.user_role ?? "—"}
+              {ROLE_LABELS[user?.user_role] ?? user?.user_role ?? "—"}{" "}
+              <InfoTooltip text="User: read-only access. Super User: can create and edit content. Admin: full access including user management and system settings." />
             </dd>
           </dl>
         </div>

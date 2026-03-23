@@ -12,6 +12,7 @@ import {
   createPerson,
   updatePerson,
 } from "../../../services/personService";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 
 const SUFFIXES = ["Jr.", "Sr.", "II", "III", "IV", "V", "MD", "PhD", "Esq."];
 
@@ -251,7 +252,8 @@ export default function UserFormPage() {
 
             <div className="mb-3">
               <label htmlFor="user_role" className="form-label">
-                Role
+                Role{" "}
+                <InfoTooltip text="User: read-only access. Super User: can create and edit content. Admin: full access including user management and system settings." />
               </label>
               <select
                 id="user_role"

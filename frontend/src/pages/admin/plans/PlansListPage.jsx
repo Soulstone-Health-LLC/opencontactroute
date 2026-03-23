@@ -23,6 +23,7 @@ import {
 } from "../../../services/planService";
 import { toast } from "react-toastify";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 import Pagination from "../../../components/ui/Pagination";
 import { useAuth } from "../../../hooks/useAuth";
 
@@ -296,8 +297,20 @@ export default function PlansListPage() {
                 <thead className="table-light">
                   <tr>
                     <th scope="col">Name</th>
-                    <th scope="col">Slug</th>
-                    <th scope="col">Sort</th>
+                    <th scope="col">
+                      Slug{" "}
+                      <InfoTooltip
+                        text="A URL-safe identifier auto-generated from the plan name. Used in the widget embed URL to target this plan."
+                        placement="top"
+                      />
+                    </th>
+                    <th scope="col">
+                      Sort{" "}
+                      <InfoTooltip
+                        text="Controls the display order in the widget. Drag any row to reorder — changes are saved automatically."
+                        placement="top"
+                      />
+                    </th>
                     <th scope="col">Status</th>
                     <th scope="col">Last Updated</th>
                     <th scope="col">
@@ -330,8 +343,20 @@ export default function PlansListPage() {
                         <span className="visually-hidden">Drag</span>
                       </th>
                       <th scope="col">Name</th>
-                      <th scope="col">Slug</th>
-                      <th scope="col">Sort</th>
+                      <th scope="col">
+                        Slug{" "}
+                        <InfoTooltip
+                          text="A URL-safe identifier auto-generated from the plan name. Used in the widget embed URL to target this plan."
+                          placement="top"
+                        />
+                      </th>
+                      <th scope="col">
+                        Sort{" "}
+                        <InfoTooltip
+                          text="Controls the display order in the widget. Drag any row to reorder — changes are saved automatically."
+                          placement="top"
+                        />
+                      </th>
                       <th scope="col">Status</th>
                       <th scope="col">Last Updated</th>
                       <th scope="col">

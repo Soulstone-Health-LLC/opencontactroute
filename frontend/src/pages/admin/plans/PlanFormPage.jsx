@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getPlan, createPlan, updatePlan } from "../../../services/planService";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 
 export default function PlanFormPage() {
   const { id } = useParams();
@@ -113,7 +114,8 @@ export default function PlanFormPage() {
                 Name{" "}
                 <span aria-hidden="true" className="text-danger">
                   *
-                </span>
+                </span>{" "}
+                <InfoTooltip text="A URL-safe slug will be auto-generated from this name." />
               </label>
               <input
                 id="name"
@@ -152,7 +154,8 @@ export default function PlanFormPage() {
 
             <div className="mb-3">
               <label htmlFor="sort_order" className="form-label">
-                Sort Order
+                Sort Order{" "}
+                <InfoTooltip text="Controls the display order in the widget. Lower numbers appear first." />
               </label>
               <input
                 id="sort_order"
@@ -165,9 +168,7 @@ export default function PlanFormPage() {
                 }
                 aria-invalid={fieldErrors.sort_order ? "true" : undefined}
                 aria-describedby={
-                  fieldErrors.sort_order
-                    ? "sort-order-error"
-                    : "sort-order-hint"
+                  fieldErrors.sort_order ? "sort-order-error" : undefined
                 }
               />
               {fieldErrors.sort_order && (
@@ -175,9 +176,6 @@ export default function PlanFormPage() {
                   {fieldErrors.sort_order}
                 </div>
               )}
-              <div className="form-text" id="sort-order-hint">
-                Controls display order. Lower numbers appear first.
-              </div>
             </div>
 
             <div className="mb-4">
@@ -193,14 +191,11 @@ export default function PlanFormPage() {
                       is_active: e.target.checked,
                     }))
                   }
-                  aria-describedby="is-active-hint"
                 />
                 <label htmlFor="is_active" className="form-check-label">
-                  Active
+                  Active{" "}
+                  <InfoTooltip text="Inactive plans are hidden from the widget." />
                 </label>
-                <div className="form-text" id="is-active-hint">
-                  Inactive plans are hidden from the widget.
-                </div>
               </div>
             </div>
 

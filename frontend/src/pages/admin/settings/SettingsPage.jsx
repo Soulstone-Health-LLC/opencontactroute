@@ -5,6 +5,7 @@ import {
   updateSiteConfig,
 } from "../../../services/settingsService";
 import { useSiteConfig } from "../../../hooks/useSiteConfig";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 
 const WIDGET_PATH = "/v1/widget";
 
@@ -81,7 +82,8 @@ export default function SettingsPage() {
           <form onSubmit={handleSave} noValidate>
             <div className="mb-3">
               <label htmlFor="org-name" className="form-label">
-                Organization Name
+                Organization Name{" "}
+                <InfoTooltip text="Shown to members in the widget as the support directory owner." />
               </label>
               <input
                 id="org-name"
@@ -90,16 +92,13 @@ export default function SettingsPage() {
                 value={config.org_name}
                 onChange={handleField("org_name")}
                 placeholder="Acme Health"
-                aria-describedby="org-name-help"
               />
-              <div id="org-name-help" className="form-text">
-                Shown to members in the widget as the support directory owner.
-              </div>
             </div>
 
             <div className="mb-4">
               <label htmlFor="primary-color" className="form-label">
-                Primary Color
+                Primary Color{" "}
+                <InfoTooltip text="Used as the accent color in the embedded widget." />
               </label>
               <div className="d-flex gap-2 align-items-center">
                 <input
@@ -119,9 +118,6 @@ export default function SettingsPage() {
                   aria-label="Primary color hex value"
                   style={{ maxWidth: "10rem" }}
                 />
-              </div>
-              <div className="form-text">
-                Used as the accent color in the embedded widget.
               </div>
             </div>
 
@@ -150,7 +146,8 @@ export default function SettingsPage() {
           {/* Direct URL */}
           <div className="mb-4">
             <label htmlFor="widget-url" className="form-label fw-semibold">
-              Direct URL
+              Direct URL{" "}
+              <InfoTooltip text="Use this as a standalone page link or button destination." />
             </label>
             <div className="input-group">
               <input
@@ -169,9 +166,6 @@ export default function SettingsPage() {
               >
                 Copy
               </button>
-            </div>
-            <div className="form-text">
-              Use this as a standalone page link or button destination.
             </div>
           </div>
 

@@ -8,6 +8,7 @@ import {
 } from "../../../services/userService";
 import { getPersons } from "../../../services/personService";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 import Pagination from "../../../components/ui/Pagination";
 
 const PER_PAGE = 20;
@@ -134,8 +135,20 @@ export default function UsersListPage() {
               <tr>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
+                <th>
+                  Role{" "}
+                  <InfoTooltip
+                    text="User: read-only access. Super User: can create and edit content. Admin: full access including user management and system settings."
+                    placement="top"
+                  />
+                </th>
+                <th>
+                  Status{" "}
+                  <InfoTooltip
+                    text="Active users can log in. Inactive users are locked out and cannot access the admin."
+                    placement="top"
+                  />
+                </th>
                 <th>Last Updated</th>
                 <th className="text-end">Actions</th>
               </tr>

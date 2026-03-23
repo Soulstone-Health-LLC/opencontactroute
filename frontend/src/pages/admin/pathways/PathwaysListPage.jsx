@@ -8,6 +8,7 @@ import {
 } from "../../../services/pathwayService";
 import { toast } from "react-toastify";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
+import InfoTooltip from "../../../components/ui/InfoTooltip";
 import Pagination from "../../../components/ui/Pagination";
 import { useAuth } from "../../../hooks/useAuth";
 
@@ -218,7 +219,13 @@ export default function PathwaysListPage() {
                       </button>
                     </th>
                   ))}
-                  <th scope="col">Status</th>
+                  <th scope="col">
+                    Status{" "}
+                    <InfoTooltip
+                      text="Published pathways are visible in the consumer widget. Draft pathways are saved but not yet visible to consumers."
+                      placement="top"
+                    />
+                  </th>
                   <th scope="col">Last Updated</th>
                   <th scope="col">
                     <span className="visually-hidden">Actions</span>

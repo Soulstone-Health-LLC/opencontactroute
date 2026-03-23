@@ -12,6 +12,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import InfoTooltip from "../../components/ui/InfoTooltip";
 import { getAudiences } from "../../services/audienceService";
 import { getPlans } from "../../services/planService";
 import { getTopics } from "../../services/topicService";
@@ -207,8 +208,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-header fw-semibold">
+        <div className="card-header fw-semibold d-flex align-items-center gap-2">
           Pathway Views — Last 30 Days
+          <InfoTooltip text="Total number of times any contact pathway widget was viewed each day over the last 30 days. Use this to spot trends in consumer engagement." />
         </div>
         <div className="card-body">
           {viewsLoading ? (
@@ -246,8 +248,9 @@ export default function DashboardPage() {
 
       {/* ── Top Pathways ─────────────────────────────────────── */}
       <div className="card mb-4">
-        <div className="card-header fw-semibold">
+        <div className="card-header fw-semibold d-flex align-items-center gap-2">
           Top Pathways — Last 30 Days
+          <InfoTooltip text="The 10 most-viewed contact pathways over the last 30 days, ranked by view count. Each row represents a unique Audience › Plan › Topic combination." />
         </div>
         <div className="card-body p-0">
           <table className="table table-sm table-hover mb-0">
@@ -291,17 +294,34 @@ export default function DashboardPage() {
       {/* ── Top Topics / Audiences / Plans ───────────────────── */}
       <div className="row g-4 mb-4">
         {[
-          { title: "Top Topics — Last 30 Days", data: topTopics, key: "topic" },
+          {
+            title: "Top Topics — Last 30 Days",
+            data: topTopics,
+            key: "topic",
+            tooltip:
+              "Topics that appeared most frequently in viewed pathways over the last 30 days. High counts indicate the questions or issues consumers are most commonly seeking guidance on.",
+          },
           {
             title: "Top Audiences — Last 30 Days",
             data: topAudiences,
             key: "audience",
+            tooltip:
+              "Audience types whose pathways received the most views over the last 30 days. Use this to understand which member or consumer segments are most actively using the widget.",
           },
-          { title: "Top Plans — Last 30 Days", data: topPlans, key: "plan" },
-        ].map(({ title, data, key }) => (
+          {
+            title: "Top Plans — Last 30 Days",
+            data: topPlans,
+            key: "plan",
+            tooltip:
+              "Plans whose pathways received the most views over the last 30 days. Use this to identify which plan types drive the highest contact volume.",
+          },
+        ].map(({ title, data, key, tooltip }) => (
           <div className="col-md-4" key={title}>
             <div className="card h-100">
-              <div className="card-header fw-semibold">{title}</div>
+              <div className="card-header fw-semibold d-flex align-items-center gap-2">
+                {title}
+                <InfoTooltip text={tooltip} />
+              </div>
               <div className="card-body">
                 {topLoading ? (
                   <div
