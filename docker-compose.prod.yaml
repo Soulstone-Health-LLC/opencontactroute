@@ -1,15 +1,31 @@
-# docker-compose.yaml — Development only
-# For production deployment with HTTPS via Caddy, use docker-compose.prod.yaml
-#   make prod-up
-
 services:
+  # Caddy reverse proxy — handles TLS and routes traffic to frontend/backend
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      CADDY_TLS_EMAIL: ${CADDY_TLS_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - react-express
+    depends_on:
+      - frontend
+      - backend
+
   # Frontend service
   frontend:
     build:
       context: frontend
     container_name: frontend
-    ports:
-      - 3000:3000
+    # No direct port binding — traffic comes through Caddy only
     volumes:
       - ./frontend:/usr/src/app
       - /usr/src/app/node_modules
@@ -23,6 +39,7 @@ services:
     build:
       context: backend
     container_name: backend
+    # No direct port binding — traffic comes through Caddy only
     environment:
       MONGO_HOST: mongodb
       MONGO_USERNAME: ${MONGO_USERNAME}
@@ -36,8 +53,6 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-Admin}
       ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-User}
-    ports:
-      - 3001:3001
     volumes:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
@@ -52,11 +67,11 @@ services:
   mongodb:
     image: mongo:8
     container_name: mongo
+    restart: unless-stopped
+    # No direct port binding — not accessible outside Docker in production
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    ports:
-      - 27017:27017
     volumes:
       - mongo_data:/data/db
     networks:
@@ -76,3 +91,5 @@ networks:
 # Volumes
 volumes:
   mongo_data:
+  caddy_data:
+  caddy_config:

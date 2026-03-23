@@ -1,8 +1,10 @@
 # Makefile
-.PHONY: build run up stop clean logs start api restart seed demo
+.PHONY: build run up stop clean logs start api restart seed demo \
+        prod-up prod-start prod-stop prod-logs prod-seed
 
 # Docker-related variables
 DOCKER_COMPOSE = docker compose
+PROD_COMPOSE = docker compose -f docker-compose.prod.yaml
 
 # Build the Docker image
 build:
@@ -46,3 +48,25 @@ seed:
 # Bring up MongoDB + backend, then seed demo data
 demo: api
 	$(DOCKER_COMPOSE) exec backend npm run seed
+
+# ── Production (Caddy + TLS) ──────────────────────────────────────────────────
+
+# Build and start all production containers (including Caddy)
+prod-up:
+	$(PROD_COMPOSE) up --build -d
+
+# Start production containers without rebuilding
+prod-start:
+	$(PROD_COMPOSE) up -d
+
+# Stop production containers
+prod-stop:
+	$(PROD_COMPOSE) down
+
+# View production logs
+prod-logs:
+	$(PROD_COMPOSE) logs --tail=100 -f
+
+# Run the seed script in the production backend container
+prod-seed:
+	$(PROD_COMPOSE) exec backend npm run seed

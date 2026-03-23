@@ -1,0 +1,11 @@
+{
+	email {env.CADDY_TLS_EMAIL}
+}
+
+{env.DOMAIN} {
+	# Route all API calls to the backend
+	reverse_proxy /api/* backend:3001
+
+	# Route everything else to the frontend
+	reverse_proxy * frontend:3000
+}

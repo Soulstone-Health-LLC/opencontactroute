@@ -493,7 +493,6 @@ The admin interface is a React single-page application served at the application
   - Status indicator (draft / published)
 - Publish / unpublish action with confirmation
 - Delete with confirmation _(Admin and Super User only)_
-- Preview mode — shows exactly what the consumer widget will render for the pathway
 
 #### Reporting
 
@@ -502,7 +501,6 @@ The admin interface is a React single-page application served at the application
 #### System Settings _(Admin only)_
 
 - Instance display name shown in widget header and admin nav
-- Logo upload (displayed in admin header and widget)
 - Embed configuration: allowed embed domains / origins
 
 ### General Admin UX Requirements
@@ -736,7 +734,6 @@ A Bootstrap theme file (`src/styles/_theme.scss`) overrides Bootstrap's CSS cust
 
 - `--bs-primary` — primary action color
 - `--bs-body-font-family` — base font family
-- Logo image (uploaded via admin)
 
 ### Component Usage Guidelines
 
