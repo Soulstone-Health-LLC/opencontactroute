@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
+import InfoTooltip from "../../components/ui/InfoTooltip";
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -35,7 +36,7 @@ export default function LoginPage() {
       <div className="row g-0 min-vh-100">
         {/* Left column — branding / future logo area */}
         <div
-          className="col-12 col-md-6 d-flex align-items-center justify-content-center bg-primary"
+          className="col-12 col-md-6 d-flex align-items-center justify-content-center bg-dark"
           aria-hidden="true"
         >
           <div className="text-white text-center p-5">
@@ -52,8 +53,7 @@ export default function LoginPage() {
             className="w-100 px-4 px-sm-5 text-start"
             style={{ maxWidth: 480 }}
           >
-            <h2 className="mb-1">Log in</h2>
-            <p className="mb-4">Enter your credentials to continue.</p>
+            <h2 className="mb-4">Log in</h2>
 
             {error && (
               <div
@@ -85,7 +85,8 @@ export default function LoginPage() {
 
               <div className="mb-4">
                 <label htmlFor="password" className="form-label fw-semibold">
-                  Password
+                  Password{" "}
+                  <InfoTooltip text="Forgot your password? Contact your Admin — they can reset it for you." />
                 </label>
                 <input
                   id="password"
