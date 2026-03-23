@@ -20,6 +20,7 @@ export default function SettingsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [previewKey, setPreviewKey] = useState(0);
   const { reloadSiteConfig } = useSiteConfig();
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       const res = await updateSiteConfig(config);
       setConfig(res.data);
       reloadSiteConfig();
+      setPreviewKey((k) => k + 1);
       toast.success("Settings saved.");
     } catch {
       toast.error("Failed to save settings.");
@@ -219,6 +221,7 @@ export default function SettingsPage() {
               style={{ height: 520, overflow: "hidden" }}
             >
               <iframe
+                key={previewKey}
                 ref={previewRef}
                 src={widgetUrl}
                 title="Widget preview"
