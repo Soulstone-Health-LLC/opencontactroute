@@ -17,13 +17,11 @@ import { getPlans } from "../../services/planService";
 import { getTopics } from "../../services/topicService";
 import { getPathways } from "../../services/pathwayService";
 import {
-  getContentAudit,
   getPathwayViews,
   getTopPathways,
   getTopTopics,
   getTopAudiences,
   getTopPlans,
-  getPathwayCoverage,
 } from "../../services/reportService";
 
 function LoadingRow({ cols }) {
@@ -75,7 +73,6 @@ export default function DashboardPage() {
     plans: 0,
     topics: 0,
   });
-  const [recentPathways, setRecentPathways] = useState([]);
   const [viewsData, setViewsData] = useState([]);
   const [viewsLoading, setViewsLoading] = useState(true);
   const [topPathways, setTopPathways] = useState([]);
@@ -83,9 +80,6 @@ export default function DashboardPage() {
   const [topAudiences, setTopAudiences] = useState([]);
   const [topPlans, setTopPlans] = useState([]);
   const [topLoading, setTopLoading] = useState(true);
-  const [coverage, setCoverage] = useState(null);
-  const [coverageLoading, setCoverageLoading] = useState(true);
-  const [coverageError, setCoverageError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -94,13 +88,12 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [pathwaysRes, audiencesRes, plansRes, topicsRes, auditRes] =
+        const [pathwaysRes, audiencesRes, plansRes, topicsRes] =
           await Promise.all([
             getPathways(),
             getAudiences(),
             getPlans(),
             getTopics(),
-            getContentAudit({ limit: 5 }),
           ]);
 
         const publishedPathways = pathwaysRes.data.filter(
@@ -113,8 +106,6 @@ export default function DashboardPage() {
           plans: plansRes.data.filter((p) => p.is_active).length,
           topics: topicsRes.data.filter((t) => t.is_active).length,
         });
-
-        setRecentPathways(auditRes.data.data.slice(0, 5));
       } catch {
         setError("Failed to load dashboard data. Please refresh the page.");
       } finally {
@@ -168,23 +159,9 @@ export default function DashboardPage() {
       }
     }
 
-    async function fetchCoverage() {
-      setCoverageLoading(true);
-      setCoverageError(null);
-      try {
-        const res = await getPathwayCoverage();
-        setCoverage(res.data);
-      } catch {
-        setCoverageError("Failed to load pathway coverage.");
-      } finally {
-        setCoverageLoading(false);
-      }
-    }
-
     fetchDashboardData();
     fetchViews();
     fetchTopData();
-    fetchCoverage();
   }, []);
 
   return (
@@ -359,147 +336,6 @@ export default function DashboardPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* ── Pathway Coverage ─────────────────────────────────── */}
-      <div className="card mb-4">
-        <div className="card-header fw-semibold">Pathway Coverage</div>
-        <div className="card-body">
-          {coverageError && (
-            <div className="alert alert-danger" role="alert">
-              {coverageError}
-            </div>
-          )}
-          {coverageLoading ? (
-            <div className="row g-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="col-sm-6 col-xl-3">
-                  <div className="card">
-                    <div
-                      className="card-body placeholder-glow"
-                      aria-busy="true"
-                    >
-                      <span className="placeholder col-8 fs-3" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : coverage ? (
-            <>
-              <div className="row g-3 mb-3">
-                {[
-                  { label: "Total Possible", value: coverage.total_possible },
-                  { label: "Published", value: coverage.published },
-                  { label: "Draft", value: coverage.draft },
-                  { label: "Uncovered", value: coverage.uncovered },
-                ].map(({ label, value }) => (
-                  <div key={label} className="col-sm-6 col-xl-3">
-                    <div className="card">
-                      <div className="card-body">
-                        <p className="text-muted small mb-1">{label}</p>
-                        <p className="fs-3 fw-bold mb-0">{value}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {coverage.uncovered_combinations?.length > 0 && (
-                <details>
-                  <summary
-                    className="small text-muted"
-                    style={{ cursor: "pointer" }}
-                  >
-                    Show {coverage.uncovered_combinations.length} uncovered
-                    combinations
-                  </summary>
-                  <ul className="mt-2 small list-unstyled ps-2">
-                    {coverage.uncovered_combinations.map((combo, i) => (
-                      <li key={i}>
-                        {combo.audience?.name ?? combo.audience_id} &rsaquo;{" "}
-                        {combo.plan?.name ?? combo.plan_id} &rsaquo;{" "}
-                        {combo.topic?.name ?? combo.topic_id}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-            </>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Recently Updated Pathways</h5>
-          <Link to="/admin/pathways" className="small">
-            View all
-          </Link>
-        </div>
-        {loading ? (
-          <div className="card-body text-center py-4" aria-busy="true">
-            <div
-              className="spinner-border spinner-border-sm text-secondary"
-              role="status"
-            >
-              <span className="visually-hidden">Loading…</span>
-            </div>
-          </div>
-        ) : recentPathways.length === 0 ? (
-          <div className="card-body">
-            <p className="text-muted mb-0">No pathways found.</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th scope="col">Audience</th>
-                  <th scope="col">Plan</th>
-                  <th scope="col">Topic</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Last Updated</th>
-                  <th scope="col">
-                    <span className="visually-hidden">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentPathways.map((pathway) => (
-                  <tr key={pathway._id}>
-                    <td>{pathway.audience_id?.name ?? "—"}</td>
-                    <td>{pathway.plan_id?.name ?? "—"}</td>
-                    <td>{pathway.topic_id?.name ?? "—"}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          pathway.status === "published"
-                            ? "bg-success"
-                            : "bg-secondary"
-                        }`}
-                      >
-                        {pathway.status}
-                      </span>
-                    </td>
-                    <td>
-                      {pathway.updatedAt
-                        ? new Date(pathway.updatedAt).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td className="text-end">
-                      <Link
-                        to={`/admin/pathways/${pathway._id}/edit`}
-                        className="btn btn-outline-secondary btn-sm"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );

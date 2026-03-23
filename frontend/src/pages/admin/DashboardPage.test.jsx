@@ -23,24 +23,6 @@ const mockPathways = [
   { _id: "pw2", name: "PPO Provider Auth", status: "draft" },
   { _id: "pw3", name: "EPO Claims", status: "published" },
 ];
-const mockRecentPathways = [
-  {
-    _id: "pw1",
-    status: "published",
-    audience_id: { name: "Members" },
-    plan_id: { name: "HMO" },
-    topic_id: { name: "Billing" },
-    updatedAt: "2026-03-10T12:00:00.000Z",
-  },
-  {
-    _id: "pw2",
-    status: "draft",
-    audience_id: { name: "Providers" },
-    plan_id: { name: "PPO" },
-    topic_id: { name: "Auth" },
-    updatedAt: "2026-03-09T08:00:00.000Z",
-  },
-];
 
 function setupMocks() {
   vi.spyOn(audienceService, "getAudiences").mockResolvedValue({
@@ -50,9 +32,6 @@ function setupMocks() {
   vi.spyOn(topicService, "getTopics").mockResolvedValue({ data: mockTopics });
   vi.spyOn(pathwayService, "getPathways").mockResolvedValue({
     data: mockPathways,
-  });
-  vi.spyOn(reportService, "getContentAudit").mockResolvedValue({
-    data: { total: 2, page: 1, limit: 5, pages: 1, data: mockRecentPathways },
   });
   vi.spyOn(reportService, "getPathwayViews").mockResolvedValue({
     data: { data: [], group_by: "day" },
@@ -68,15 +47,6 @@ function setupMocks() {
   });
   vi.spyOn(reportService, "getTopPlans").mockResolvedValue({
     data: { data: [] },
-  });
-  vi.spyOn(reportService, "getPathwayCoverage").mockResolvedValue({
-    data: {
-      total_possible: 64,
-      published: 24,
-      draft: 4,
-      uncovered: 36,
-      uncovered_combinations: [],
-    },
   });
 }
 
@@ -118,14 +88,6 @@ describe("DashboardPage", () => {
       expect(screen.getByText("Active Plans")).toBeInTheDocument();
       expect(screen.getByText("Active Topics")).toBeInTheDocument();
     });
-
-    it("renders the Recently Updated Pathways section", async () => {
-      setupMocks();
-      renderDashboard();
-      expect(
-        screen.getByRole("heading", { name: /recently updated pathways/i }),
-      ).toBeInTheDocument();
-    });
   });
 
   describe("Data loading", () => {
@@ -139,58 +101,6 @@ describe("DashboardPage", () => {
         expect(screen.getByText("1")).toBeInTheDocument();
       });
     });
-
-    it("renders pathway rows in the table after loading", async () => {
-      setupMocks();
-      renderDashboard();
-      await waitFor(() =>
-        expect(screen.getByText("Members")).toBeInTheDocument(),
-      );
-      expect(screen.getByText("Providers")).toBeInTheDocument();
-    });
-
-    it("shows published badge for published pathways", async () => {
-      setupMocks();
-      renderDashboard();
-      await waitFor(() =>
-        expect(screen.getByText("Members")).toBeInTheDocument(),
-      );
-      expect(screen.getByText("published")).toBeInTheDocument();
-    });
-
-    it("shows draft badge for draft pathways", async () => {
-      setupMocks();
-      renderDashboard();
-      await waitFor(() =>
-        expect(screen.getByText("Providers")).toBeInTheDocument(),
-      );
-      expect(screen.getByText("draft")).toBeInTheDocument();
-    });
-
-    it("renders an Edit link for each pathway row", async () => {
-      setupMocks();
-      renderDashboard();
-      await waitFor(() =>
-        expect(screen.getByText("Members")).toBeInTheDocument(),
-      );
-      const editLinks = screen.getAllByRole("link", { name: /edit/i });
-      expect(editLinks).toHaveLength(2);
-    });
-
-    it("renders a no-pathways message when content audit returns empty", async () => {
-      vi.spyOn(audienceService, "getAudiences").mockResolvedValue({ data: [] });
-      vi.spyOn(planService, "getPlans").mockResolvedValue({ data: [] });
-      vi.spyOn(topicService, "getTopics").mockResolvedValue({ data: [] });
-      vi.spyOn(pathwayService, "getPathways").mockResolvedValue({ data: [] });
-      vi.spyOn(reportService, "getContentAudit").mockResolvedValue({
-        data: { total: 0, page: 1, limit: 5, pages: 0, data: [] },
-      });
-
-      renderDashboard();
-      await waitFor(() =>
-        expect(screen.getByText(/no pathways found/i)).toBeInTheDocument(),
-      );
-    });
   });
 
   describe("Error handling", () => {
@@ -201,9 +111,6 @@ describe("DashboardPage", () => {
       vi.spyOn(planService, "getPlans").mockResolvedValue({ data: [] });
       vi.spyOn(topicService, "getTopics").mockResolvedValue({ data: [] });
       vi.spyOn(pathwayService, "getPathways").mockResolvedValue({ data: [] });
-      vi.spyOn(reportService, "getContentAudit").mockResolvedValue({
-        data: { total: 0, page: 1, limit: 5, pages: 0, data: [] },
-      });
 
       renderDashboard();
       await waitFor(() =>
@@ -220,9 +127,6 @@ describe("DashboardPage", () => {
       vi.spyOn(planService, "getPlans").mockResolvedValue({ data: [] });
       vi.spyOn(topicService, "getTopics").mockResolvedValue({ data: [] });
       vi.spyOn(pathwayService, "getPathways").mockResolvedValue({ data: [] });
-      vi.spyOn(reportService, "getContentAudit").mockResolvedValue({
-        data: { total: 0, page: 1, limit: 5, pages: 0, data: [] },
-      });
 
       renderDashboard();
       await waitFor(() =>
