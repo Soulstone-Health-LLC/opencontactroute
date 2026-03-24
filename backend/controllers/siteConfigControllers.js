@@ -30,8 +30,8 @@ export const updateSiteConfig = asyncHandler(async (req, res) => {
     upsert: true,
     returnDocument: "after",
     setDefaultsOnInsert: true,
+    _changedBy: req.user._id,
   });
-  config._changedBy = req.user._id;
 
   res.json(config);
 });
