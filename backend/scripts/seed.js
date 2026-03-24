@@ -1,6 +1,16 @@
 /**
  * Seed script — populates the database with representative demo data.
  *
+ * ⚠️  SECURITY WARNING ⚠️
+ * This script creates demo accounts with publicly documented credentials:
+ *   - superuser@example.com / SuperUser!Demo1
+ *   - member@example.com   / Member!Demo1234
+ *
+ * These credentials are well-known. DO NOT run this script against any
+ * public-facing instance without removing or changing these accounts
+ * immediately afterward. Use `make prod-seed` only for initial setup on
+ * a trusted, network-restricted host.
+ *
  * Usage (from the backend/ directory):
  *   node scripts/seed.js
  *
@@ -11,8 +21,8 @@
  * Records created:
  *   Users:
  *     - 1 admin        (ADMIN_EMAIL / ADMIN_PASSWORD env vars)
- *     - 1 super user   (superuser@example.com / SuperUser!Demo1)
- *     - 1 regular user (member@example.com   / Member!Demo1234)
+ *     - 1 super user   (superuser@example.com / SuperUser!Demo1)  ⚠️ known creds
+ *     - 1 regular user (member@example.com   / Member!Demo1234)   ⚠️ known creds
  *
  *   Reference data:
  *     - 4 audiences  (3 active, 1 inactive — tests widget active-only filter)

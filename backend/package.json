@@ -13,9 +13,14 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "author": "Rodney Gauna",
+  "author": "Soulstone Health LLC",
   "license": "AGPL-3.0-only",
   "description": "OpenContactRoute backend API - MERN stack contact route platform",
+  "homepage": "https://github.com/Soulstone-Health-LLC/opencontactroute#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Soulstone-Health-LLC/opencontactroute.git"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",

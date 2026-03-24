@@ -1,8 +1,11 @@
 {
-  "name": "frontend",
+  "name": "opencontactroute-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "OpenContactRoute frontend — React/Vite member-facing widget and admin portal",
+  "author": "Soulstone Health LLC",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
